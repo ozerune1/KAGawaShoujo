@@ -1,1225 +1,2445 @@
-﻿Title: 吉里吉里/KAGEXについて
-Author: 合資会社ワムソフト 渡邊剛
-
-●吉里吉里/KAGEX 概要
-
-吉里吉里/KAG に対して主にレイヤ機能面で大きく拡張を行ったシステムです。
-
-・レイヤの回転・拡大縮小処理
-・レイヤの重ね合わせレベルの制御の処理
-・レイヤの自動アクション処理
-
-システムの基本概念は吉里吉里/KAG のままで、基本機能もそのまま
-維持されています。本ドキュメントを読む前に、まず、KAG の全体を
-把握してください。
-
-KAG の詳細については
-
- http://devdoc.kikyou.info/tvp/docs/kag3doc/contents/
-
-を参照してください。
-
-●注意事項
-
-fadepausebgm/setbgmlabel/clearbgmlabel/setbgmstop/clearbgmstop 
-timeout/ctimeout/click/cclick/wheel/cwheel は KAGに統合されました
-
-Affine変形処理の原点ルールが変更になっています。
-現在のシステムでは回転中心＝レイヤ原点です。
-従来的な配置にする場合は、afx, afy を center
-にした上で表示座標をその分ずらす必要があります。
-
-●フォルダ構成
-
-原則 KAG に準じます。
-
-krkr.exe        吉里吉里実行ファイル本体
-plugin/         プラグイン
-tools/          関連ツール
-savedata/       セーブデータ
-data/           データ領域
-    system/     システムファイル
-    bgimage/    背景ファイル用
-    bgm/        BGMファイル用
-    fgimage/    前景ファイル用
-    image/      その他画像
-    others/     その他データ
-    rule/       画面更新用ルール画像
-    scenario/   シナリオファイル
-    sound/      サウンドデータ
-    video/      動画データ
-    voice/      ボイスデータ
-　　main/       システムスクリプト　※ KAGEX 側で追加
-
-    startup.tjs 吉里吉里起動ファイル
-
-基本的に素材のファイルを指定するときはパス名はつけず、
-ファイル名のみの自動探索によって探します。
-
-☆ KAGEX の追加機能
-
-Storages.tjs に自動探索パス指定を別途追加することができます。
-Initialize.tjs の記述に準じた記述を追加してください。
-
-記述例
----------------------------------------------------------------
-Storages.addAutoPath("thum/"); // サムネール画像用フォルダ
----------------------------------------------------------------
-
-●拡張内容解説
-
-◇制御系拡張
-
-◆待ちコマンド全般 (拡張)
-
-wait パラメータが指定された待ち命令は、規定の待ち動作のあと、
-さらに追加で指定された「時間」分待ちます。
-クリックで動作キャンセルされた場合はこの追加の待ちはありません。
-
-属性
-	wait	追加待ち指定 (ms単位)
-
-※ wait, wd, waituntil ではこの拡張は無効です
-
-◆待ちありコマンド全般(拡張)
-
-動作に対して対応する待ちがあるコマンドに自動的に待ち動作を実行する
-属性が追加されています。
-
-属性
-	sync	待ち実行
-	wait	追加待ち指定(ms単位)
-
-対応するコマンド
-
- quake, animstart, trans, move, action, 
- fadeinbgm, fadeoutbgm, fadepausebgm, fadebgm, xchgbgm, 
- fadeinse, fadeoutse, fadese,
- playvideo
-
-◆コマンド全般 (拡張)
-
-delayrun パラメータが指定されたコマンドは、待ち処理中に遅延実行されます。
-
-属性
-	delayrun    遅延パラメータ指定
-				数値: 指定の時間(ms単位)以上遅延して実行されます
-                文字列: BGM/SEの該当するラベルのタイミングで実行されます
-
-lineModeによる改ページ処理前(クリック待ちの後)、
-または [delaydone] コマンドで遅延実行はキャンセル(全部その時点で実行)されます
-
-◆delaydone (新規)
-
-実行が遅延しているコマンドをすべて強制実行します。
-
-◆delaycancel (新規)
-
-実行が遅延しているコマンドをすべてキャンセルします。
-
-◆wd (新規)
-
-遅延待ち。BGM/SEの該当するラベルを通過するまで待ちます。
-ラベル通過済みの場合はスルーされます
-
-属性
-	name	待ちラベル
-	canskip スキップ可能なら true
-
-◆td (新規)
-
-遅延実行ラベル登録。BGM/SEのラベルとは別に遅延処理用の
-ラベルを手動登録します。
-
-属性
-	ラベル名=遅延時間	の形で任意のラベルを登録できます。
-
-◆waituntil (新規)
-
-機能的には waittag の until パラメータと等価。
-ただし、一度でもクリックされると、resetwait の時間原点をクリアして
-それ以降の waituntil を無効化します。
-
-◆showwait(新規）
-
-テスト用コマンド。コマンド実行時の時間原点からの差分をログ表示します
-
-◆set (新規)
-
-変数を設定する
-
-属性
-	name	変数名 tf.* f.* sf.*
-	value	値(文字列扱い)
-
-◆func (新規)
-
-TJS関数を呼び出す
-
-属性
-	name	グローバル関数名
-	その他	パラメータが辞書として関数の第一引数に渡ります
-
-◇レイヤ拡張
-
-◆baseレイヤの非プライマリレイヤ化
-
-KAGEX では、base レイヤは Window.primaryLayerではなくなって
-います。ご注意ください。
-
-◆前景レイヤへのレベル概念の導入
-
-KAG 本来の前景レイヤは番号順の表示順をもっています。
-KAGEX では、レベル」という概念を持ち、レベル単位で表示順が決定されます。
-
-・レベルが小さいレイヤ群ほど下に表示されます
-  →laylevel コマンドで制御可能
-
-・同じレベルの中で「最前列」「最後列」の表示制御が可能です
-  →layfront / layback コマンドで制御可能
-
-◆image (拡張)
-
-前景レイヤに対して、従来の image に加えて
-以下の属性を追加で利用できるようになります。
-
-color, storage, tile, flip は排他で、この順で有効です。
-レイヤのサイズは自動的に読み込まれた素材のサイズになります。
-
-属性
-	storage	画像指定(拡張)
-		・*.emf / *.wmf ベクタ画像も扱えます
-		・*.psb 指定時はモーションデータを読み込みます
-		  以下の追加パラメータを同時に指定します
-			chara			キャラ指定
-			motion			モーション指定
-			stealthchara	キャラの隠し差し替え
-			stealthmotion	モーションの隠し差し替え
-			flags			モーション再生フラグ
-			tickcount		モーションのtick値	
-			speed			再生速度指定
-
-    color   塗りつぶし色
-    width   塗りつぶし時サイズ横幅
-    height  塗りつぶし時サイズ縦幅
-
-    tile    画像タイル敷き詰めファイル名。color, storageがあると無効
-    tilex   タイル位置X
-    tiley   タイル位置Y
-
-	clipimage		クリッピング画像指定
-	clipimageleft	クリッピング画像配置位置X
-	clipimagetop	クリッピング画像配置位置Y
-		実際に画面表示する際に指定した画像のα情報で切り抜いて表示します。
-　　　	※クリップ画像の座標値は画面に対する絶対座標指定です
-
-	flip		フリップ描画対象ファイル。color, storage, tile があると無効
-	fliptype	フリップの種別を指定 
-				※未指定時は flipで指定したファイルの拡張子も参照されます
-				movie:  .mpeg .mpg .wmv
-				flash:  .swf
-				particle: .tjs
-				fire: 未指定
-    movie   flip指定＋fliptype:movie と等価　※互換用
-    fire    flip指定＋fliptype:fire  と等価  ※互換用
-
-
-	movie用オプションパラメータ
-	    loop    動画がループ再生するかどうかを指定
-	    alpha   0:通常の動画
-    	        1:α動画。画面上半分をRGB、下半分をαとみなす
-        	    2:α動画。画面左半分をRGB、右半分をαとみなす
-
-	fire用オプションパラメータ
-	    firecolor   炎エフェクトカラー指定 red, blue, white または 
-    	        0xRRGGBB で色指定。色指定を 0xRRGGBB:0xRRGGBB と ":" で
-	            連ねると、そのグラデーションになります。
-        	    先に記述したほうが温度が高い部分の色です。
-            	平均的に色配置されますが、":" を複数記述するとその
-    	        部分の領域が長くなります。α値は線形になります
-	    firegamma   firecolor で直接色指定した場合、それのα値の変動を
-	            線形でなくする場合に指定します。
-	    firelayer   256×1 サイズのレイヤで炎の色マップ画像を直接指定します
-	    firewidth   炎エフェクト領域サイズ指定。省略時は元ファイルサイズ
-	    fireheight  炎エフェクト領域サイズ指定。省略時は元ファイルサイズ
-	    fireleft    炎エフェクト種画像配置位置
-	    firetop     炎エフェクト種画像配置位置
-	    firemargin  炎エフェクト画像領域を前後左右にこれだけ拡張
-	    forceh  横方向フォース指定(-8〜8)
-	    forcev  縦方向フォース指定(-8〜8)
-	    boundRangeH 横方向バウンドレンジ 0〜16
-	    boundRangeV 縦方向バウンドレンジ 0〜16
-	    scalingCoeff    スケーリング係数 0〜0.01
-	    numOfBlurForCoolMap ブラー適用回数 0〜
-   		textureFilterType テクスチャフィルタ　0:ニアレスネイバー, 1:バイリニア
-	    coolRange   強さの振れ幅を設定 0〜256
-    	coolStrength    強さ 0〜255
-	    coolParticleDensityDenominator  冷却粒子濃度分母 0>
-    	coolParticleDensityNumerator    冷却粒子濃度分子 0>
-	    edgeSmoothing　炎の端を目立ちにくくするかどうか
-
-	flas用オプションパラメータ
-		flashwidth
-		flashheight
-
-	particle用オプションパラメータ
-		genratio
-		ptidx
-
-	flipx	横方向反転(true/false)
-	flipy	縦方向反転(true/false)
-	slantx	横方法傾斜率(%)
-	slanty	縦方向傾斜率(%)
-    zoomx   横方向拡大率(%)
-    zoomy   縦方向拡大率(%)
-    zoom    拡大率(%) XY同時指定
-    rotate  回転角度(度)
-    afx     回転・拡大原点X座標 center/left/right 
-            または数値でレイヤの左上隅からの座標
-    afy     回転・拡大原点Y座標 center/top/bottom
-            または数値でレイヤの左上隅からの座標
-    dafx    afx をデフォルトごと指定する(リセットでこの値に戻ります)
-    dafy    afy をデフォルトごと指定する(リセットでこの値に戻ります)
-    type    合成モード
-            ※http://devdoc.kikyou.info/tvp/docs/kr2doc/contents/index.html
-    reset   アクションと属性指定をすべて初期化する
-            ※opacity と type は画像ロード時のものに初期化されます
-
-	※アフィン変形は flip → slant → zoom → rotate の順に処理されます
-
-◆layopt (拡張)
-
-前景レイヤに対して、従来の layopt に加えて
-以下の属性を追加で利用できるようになります。
-
-属性
-    type    合成モード
-            ※http://devdoc.kikyou.info/tvp/docs/kr2doc/contents/index.html
-    reset   アクションと属性指定をすべて初期化する
-            ※opacity と type は画像ロード時のものに初期化されます
-    time    指定時間で移動
-    accel   移動のアクセラレーション
-		負の数:減速
-		0:リニア
-		正の数:加速
-		"acdec"：加減速運動（３次曲線）
-		"accos"：加減速運動（コサイン移動）
-    nowait  待ち処理時にキャンセルしない
-　　left    time対応
-    top     time対応
-    afx     回転・拡大原点X座標 center/left/right 
-            または数値でレイヤの左上隅からの座標
-    afy     回転・拡大原点Y座標 center/top/bottom
-            または数値でレイヤの左上隅からの座標
-    rotate  回転角度
-    zoomx   横方向拡大率
-    zoomy   縦方向拡大率
-    zoom    拡大率
-    raster      ラスタースクロールの振幅量
-    rasterlines ラスタースクロールの行数
-    rastercycle ラスタースクロールの周期
-    tilex   タイル位置X
-    tiley   タイル位置Y
-	clipimage		クリッピング画像指定
-	clipimageleft	クリッピング画像配置位置X
-	clipimagetop	クリッピング画像配置位置Y
-
-　　＋各種flipエフェクトのパラメータも調整指定可能
-
-	モーション再生時のみ有効なパラメータ
-
-	chara			キャラ指定
-	motion			モーション指定
-	stealthchara	キャラの隠し差し替え
-	stealthmotion	モーションの隠し差し替え
-	flags			モーション再生フラグ
-	tickcount		モーションのtick値	
-	speed			再生速度指定
-
-◆laylevel (新規)
-
-前景レイヤの表示レベルを指定します。
-
-属性
-    layer   レイヤを指定(前景レイヤのみ)
-    page    表裏画面の指定(省略時は fore)  
-    level   表示レベル
-            layfront/layback でのグルーピング対象です。
-            表示レベルが大きいほど上に表示されます。
-
-◆layfront (新規)
-
-前景レイヤを同じ表示レベルの最前列に移動させます
-
-属性
-    layer   レイヤを指定(前景レイヤのみ)
-    page    表裏画面の指定(省略時は fore)  
-
-◆layback (新規)
-
-前景レイヤを同じ表示レベルのレイヤの最後列に移動させます
-
-属性
-    layer   レイヤを指定(前景レイヤのみ)
-    page    表裏画面の指定(省略時は fore)  
-
-◆wv (拡張)
-
-layer パラメータを指定すると、前景レイヤの動画再生完了を待ちます
-
-属性
-    layer   動画再生中のレイヤ。"all" だと全レイヤムービーを待つ
-    canskip スキップ可能なら true
-
-
-◆clearlayers (新規)
-
-全レイヤの内容を消去して表示停止します。
-
-属性
-    page    表裏画面の指定
-
-◆action (新規)
-
-前景レイヤに対して、
-レイヤに対する自動アクション駆動を指定します
-
-属性
-    layer   レイヤの指定（前景のみ)
-    page    表裏画面の指定
-    time    アクションが実行される時間を指定します。未指定時は無限ループ
-    delay   アクション開始までの遅延時間を指定します
-    nowait  アクションに対する wait を無効にする 
-            (wact や wait のアクション解除処理に反応しなくなります)
-    action  アクションの直接指定(グローバルな辞書または配列の名前)
-    module  アクションのモジュール指定(旧スタイル)
-    
-※アクションの種類ごとに属性パラメータがあります。
-　アクションの種別とその属性については action.txt を参照してください。
-
-◆stopaction (新規)
-
-指定されたレイヤのアクションを停止します。
-指定を省略した場合は全レイヤのアクションを停止します。
-
-属性
-    layer   レイヤの指定（前景のみ)
-    page    表裏画面の指定
-
-◆wact (新規)
-
-指定されたレイヤのアクションの終了を待ちます。
-指定を省略した場合は全レイヤのアクションの終了を待ちます。
-nowait 指定されたアクションは待つことができません。
-
-属性
-    layer   レイヤの指定（前景のみ)
-    page    表裏の指定
-    canskip 値 true(デフォルト) または false
-            true を指定するとクリックで待ちをスキップできます
-
-◆wat (新規)
-
-指定されたレイヤのアクションおよびトランジションの終了を待ちます。
-指定を省略した場合は全レイヤのアクションおよびトランジションの終了を待ちます。
-nowait 指定されたアクションは待つことができません。
-
-属性
-    layer   レイヤの指定（前景のみ)
-    page    表裏の指定
-    canskip 値 true(デフォルト) または false
-            true を指定するとクリックで待ちをスキップできます
-
-◆ltbegin (新規)
-
-レイヤを利用した画面切り替えの開始。
-画面の最前面に配置したレイヤによるマスクでの画面切り替えを行う。
-
-使い方
--------------------
-[ltbegin]
-画面切り替え用の命令を配置（トランジションなどを行わないこと！）
-[ltend]
--------------------
-
-属性
-    type    切り替え種別
-             trans   トランジション ※未指定時デフォルト
-             wipeltor 左から右へのワイプ
-             wipertol 右から左へのワイプ
-             fade    クロスフェード
-    time    切り替え時間（省略時は1000ms)
-    color   画面暗転に利用する色（省略時は黒）
-    wait    画面暗転後の待ち時間
-
-◆ltend (新規)
-
-レイヤを利用した画面切り替えの終了
-
-属性
-    ltbegin と同じ。省略時は以前の値そのままになる
-
-◇メッセージ窓表示系拡張
-
-◆拡張の概要
-
-ADV スタイルのゲーム作成に都合が良いように、
-記述ルールが拡張され、改行に対する自動処理をわりあてる
-ことが可能になっています。
-
-また、内部的に「名前レイヤ」「表情レイヤ」をサポート
-する拡張が行われています。
-
-◆linemode (新規)
-
-KAG の改行に対するルールを切り替えます。
-これを用いることで、メッセージ窓スタイルの作品の場合に
-[l]や[cm]などを明示的に記述しなくてもよくなります。
-
-※注意点 linemode が有効な場合は ignoreCR 指定が強制でONの状態になります
-
-属性
-    mode    line または page
-            未指定の場合は通常の KAG の動作に戻ります。
-
-用語解説
-　改行: テキストに直接入力されている改行コードによる改行のことです
-　空行: 改行のみの行が１行以上続いていることをさします
-
-line の場合
-    改行：[l] を実行する
-    空行：無視
-    [p] ：通常機能
-
-page の場合
-    改行：[p] ＋ページの自動消去
-    空行：無視
-
-vn の場合
-    改行：[l] を実行する
-    空行:[p] ＋ページの自動消去
-
-tex の場合:
-    改行:無視
-    空行:[p] ＋ページの自動消去
-
-free の場合:
-    改行:改行
-    空行:[p] ＋ページの自動消去
-
-[r] タグによる改行は純粋にメッセージ窓への改行として機能します。
-「自動消去」は「次の行のテキスト表示開始時」に [er] によって行われます。
-※[p] 直後に行いたい場合には、erafterpage を有効にしてください。
-
-さらに、ラインモードが有効な場合、行頭にある
-
-【名前/表示名】
-
-という記述に対して、
-名前表示コマンド [dispname name=名前 disp=表示名] が自動的に呼び出されます。
-
-◆nor (新規）
-
-ラインモード処理における「改行文字(CR)」による動作を一回だけ抑制します。
-vn モードなどで長すぎるので改行したいが効果としては使いたくない場合などに
-行末に配置します。
-
-◆afterline (新規)
-
-・line モードの場合の改行時の[l] 待ちの終了後
-・vn モードの場合の改行時の[l] 待ちの終了後
-
-に実行される特殊内部タグです。
-KAGEX では空の命令になっています。
-ワールド拡張ではヒストリのボイスの区切り処理用につかわれています。
-
-◆afterpage (新規)
-
-[p] 処理の後に自動的に実行される特殊内部タグです。
-KAGEX では空の命令になっています。
-ワールド拡張ではヒストリのボイスの区切り処理用につかわれています。
-
-◆dispname（新規）
-
-名前を表示するための特殊内部タグです。
-
-属性
-    name    名前を指定します
-    disp    表示名を指定します
-
-KAGEX では単純にテキストで名前をそのまま表示するだけです。
-ワールド拡張では名前窓をつかった処理が呼び出されます
-
-◆craftername（新規）
-
-line モードの名前表記【名前/表示名】の直後の改行の挙動を変更します
-
-属性
-    mode    true なら名前直後の改行を無視する。false なら通常の改行扱い
-
---------------------------------------
-【瑠璃子】くすくす
-
-【瑠璃子】
-くすくす
---------------------------------------
-
-true の場合はいずれの表記も等価になります
-
-◆erafterpage（新規）
-
-[p] 直後に自動的に [er] 動作を行うかどうかを指定します。
-
-属性
-    mode    true なら [p] の処理の直後に [er] 動作を行うようになる。
-
-注意点
-　これが有効な場合、line モードの自動消去
-　（次のテキスト表示直前に消去）は行われません。
-
-◆autoindent (新規)
-
-有効にすると、名前直後に “「”　または　“『”があった場合
-に自動的にインデント処理します。
-
-属性
-    mode    true または false
-
-◆autolabelmode (deplecated)
-
-※※ 廃止しました。Config.tjs で記述してください
-
-◇メッセージ窓 UI 拡張
-
-◆概要
-
-メッセージ窓に配置されたボタンなどのＵＩ諸機能が拡張されています。
-また、配置された各オブジェクトは、レイヤ.names[] プロパティ経由で
-名前ベースで参照することができます。
-
-例
--------------------------------------------------
-[current page=fore name=message0]
-[button name=auto normal="auto"] // ボタンを登録
-
-tjs から以下の記述で参照可能
-kag.fore.messages[0].names["auto"]
--------------------------------------------------
-
-全般に対する拡張
-
-属性
-    name    ＵＩパーツの名前を指定する
-
-◆button (拡張)
-
-画像ボタンのファイルを個別指定できるよう拡張してあります。
-
-属性
-    normal  通常時画像
-    over    マウスオーバー時画像    省略時は normalと同じ
-    on      押し下げ時画像          省略時は over と同じ
-    focus   フォーカス時画像        省略時は focus と同じ
-    animcount   ぱたぱたアニメパターン数を指定
-    animtime    ぱたぱたアニメのインターバル時間を指定  省略時は 1000/animcount
-
-※ボタンのアニメーション機能について
-
-ボタンを単純なぱたぱたアニメーションさせることができます。
-
-・パターンの表示インターバルは固定
-・単純ループのみ
-・縦方向に連結した画像ファイルを次々きりかえる表示になります。
-  graphic/normal/over/on/focus などで指定する画像をあらかじめそういったデータに
-　指定しておきます。ボタンの表示上の縦幅は、
-　画像ファイルの縦幅 /  animcount になります。
-
-※ラジオボタン、トリガボタンの対応についての標記を追加する必要あり XXX
-
-◆slider (新規)
-
-メッセージレイヤにスライドバーを配置します。
-
-属性
-    exp         commit 時の代入先
-    bgcolor     背景の色
-    opacity     背景の透明度
-    value       連動変数名。指定されると、
-                (1)指定された変数を初期値として参照
-                (2)変更時に指定された変数に値を代入
-                を行う。これを指定すると onchange, onchangefunc は無効
-    position    初期値
-    onchange    変更値を代入する変数名
-    onchangefunc 変更したとき呼び出される関数を指定
-                 func(position, dragging); の形で呼び出される
-　　　　　　　　 指定すると onchange は無効
-
-    base        背景画像名。
-                指定した場合は width と height は背景画像のサイズになる
-    width       背景幅
-    height      背景高さ
-    tab         タブ画像（一括) normal / on / over の順で横に並んだ画像を指定
-    normal      タブ画像通常（分離）
-    over        タブ画像マウスオーバー（分離）
-    on          タブ画像プッシュダウン時（分離）
-
-    nohighlicht ハイライトしない
-    jumpmode    ジャンプモード（スライダーのベースをクリックするとそこに移動）
-
-◆sysbutton (新規)
-
-メッセージレイヤにシステムボタンを配置します。
-システムボタンは ct でも消去されません。
-
-属性
-     button に準じます
-
-◆csysbutton (新規)
-
-システムボタンを消去します
-
-◆uiload （新規）
-
-ユーザインターフェース定義ファイルからデータを
-読み出してボタンなどのパーツを自動配置します
-
-属性
-    page        対象ページ（表裏）
-    layer       対象メッセージレイヤ
-    storage     読み出す定義ファイル
-    partremove  除外part対象
-    partexcept  指定以外除外part対象
-
-    ベース名.csv とベース名.funcの二種類のファイルが読み込まれます。
-    ※機能はどちらも同じですが、.csv は配置のみを記述、.func には
-    機能用の定義を記述することを想定してあります
-
-◇選択肢機能拡張（新規）
-
-Link とは異なる専用の選択肢機能です。
-
-◆selopt (新規)
-
-選択肢用条件初期化
-
-属性
-    normal  ボタンノーマル画像
-    over    ボタンオーバー画像
-    left    ボタン配置領域左上
-    top     ボタン配置領域右上
-    width   ボタン配置領域サイズ
-    height  ボタン配置領域サイズ
-
-◆seladd (新規)
-
-選択肢を登録します
-
-属性
-  text    表示するテキスト
-　storage 選択した場合にジャンプする先のファイル指定
-  target  選択した場合にジャンプする先のラベル指定
-  exp     選択した時に実行するコード
-  eval    選択肢表示条件
-  onceflag 一度きり表示用フラグ指定(自動的にONになる)
-
-  変数処理などを行わせる場合は exp を、直接分岐する場合は
-  storage/target を使ってください
-
-◆select (新規)
-
-  選択処理実行
-
-  storage/target が指定してあった場合は、選択処理のあと、
-  その先にジャンプします。exp の場合はそのまま [select] の
-  次の行から継続実行になります。
-
-属性
-  storage   選択分岐のあと seldone コマンドで合流する先のファイル指定
-  target    選択分岐のあと seldone コマンドで合流する先のラベル指定
-
-◆seldone (新規)
-
-  選択後合流処理
-  seladd で足した選択肢で storage/target を指定した場合に、
-　このコマンドがあると、select で指定した storage/target に合流します
-
-◆mselinit (新規)
-
-マップ選択肢を初期化します。登録された情報は消去されます。
-
-◆mselbutton (新規)
-
-マップ選択用のボタンを登録します
-
-属性
-    image       画像指定。
-    width       画像横幅指定(省略可能)
-    height      画像縦幅指定(省略可能)
-    count       画像中のアニメパターン指定(heightと排他で省略可能)
-
-    マップ選択用の画像は　
-     縦方向：アニメパターン　
-　　 横方向：normal over の順に並べる
-　　といった形の画像にします。アニメパターン数を count で指定します。
-
-◆mselpos (新規)
-
-マップ選択用のボタンの配置位置を登録します
-
-属性
-    name        位置の名前
-    left        X方向座標
-    top         Y報告座標
-
-複数の選択が同じ場所に指定された場合は、
-座標位置を中心にして左右方向に配置されます。
-
-◆mseladd (新規)
-
-選択肢を登録します。
-
-属性
-  text    表示するターゲット (mselopt で登録したもの)
-  pos     表示する位置 (mse で登録したもの)
-　storage 選択した場合にジャンプする先のファイル指定
-  target  選択した場合にジャンプする先のラベル指定
-  exp     選択した時に実行するコード
-
-◆mselopt (新規)
-
-マップ選択肢用のオプションを指定します
-
-属性
-    interval        配置選択肢のアニメーションのインターバル
-    buttonWidth     ボタンを複数配置するときのボタン間の幅
-    enterse         enter 時 SE 指定
-    leavese         leave 時 SE 指定
-    clickse         click 時 SE 指定
-    frame           背景画像指定
-    frameKey
-    frameColor
-    frameOpacity
-
-◆mselect (新規)
-
-  選択処理実行
-
-◆bradd (新規)
-
-シーン内分岐を登録します。機能的には jump でくむのと等価です。
-select 系と同じスタイルで記述するために準備されてます。
-
-属性
-  target  分岐する場合にジャンプする先のラベル指定
-  exp     分岐した時に実行するコード
-  eval    分岐条件
-
-◆branch (新規)
-
-  分岐実行
-
-  storage/target が指定してあった場合は、選択処理のあと、
-  その先にジャンプします。exp の場合はそのまま [select] の
-  次の行から継続実行になります。
-
-属性
-  target    選択分岐のあと brdone コマンドで合流する先のラベル指定
-
-◆brdone (新規)
-
-  分岐後合流処理
-  bradd での分岐の後、このコマンドがあると、
-  branch で指定した target に合流します
-
-◆next (新規)
-
-機能的には jump と等価ですが既読カウンタのアップ処理を
-含むので、基本はこちらを使ってください。
-※jump前にラベルを配置すれば問題はありません
-
-属性
-　storage ジャンプする先のファイル指定
-  target  ジャンプする先のラベル指定
-  eval    分岐条件
-
-◇シーン回想機能（新規）
-
-「シーン回想」を実現するための補助機能です。
-
-A: シナリオ中指定の場合
-
-1. シーン回想したい部分を 
--------------------
-*kaisouBegin番号
-......
-*kaisouEnd番号
--------------------
-のラベルで囲んでおきます。
-
-2. recollection 命令で no 指定でシーン回想を呼び出すことができます。
-
-この方式の場合は、セーブデータを利用して回想処理を行います。
-このため、セーブデータの不整合の影響をうけるので注意が必要です
-
-B: 回想用シナリオを別途準備する場合
-
-1. 回想用のシナリオを本来の本文とは別に準備します
-   そのシナリオの末尾には endrecollection  命令をいれておきます
-2. recoillection 命令で storage/target 指定でシーン回想シナリオを呼び出します
-
-◆recollection (新規)
-
-回想処理を呼び出す。 (kag.startRecollection(elm) と等価)
-呼び出しに成功した場合に処理は戻ってこないので注意が必要です。
-
-no での呼び出しが成功するためには *kaisouBegin番号　のラベルを
-通過しておく必要ががあります。システムフラグの 
-trail_シナリオ_*kaisouBegin番号を参照することで通過を確認できます。
-この場合は、*kaisouEnd番号 のラベルで処理が終了します
-
-no 指定でなく storage/target での指定も可能です。この場合は、
-endrecollection 命令で回想を終了させることができます。
-
-属性
-    no 回想番号
-    storage 回想用シナリオ
-    target  回想用ターゲット
-    doneStorage 回想終了後に呼び出されるシナリオ
-    doneTarget  回想終了後に呼び出されるラベル
-
-
-回想処理中は…
-・kag.isRecollection が true になります
-・栞の保存関連の処理が禁止されます
-・常に既読扱いになります
-
-◆endrecollection (新規)
-
-回想処理を終了させます。
-recollection で登録済みの終了処理に遷移します。
-
-◆stoprecollection (新規)
-
-回想処理を強制終了します。
-回想状態が解除されます。
-
-◆clearplaytime (新規)
-
-プレイ時間情報を消去します。
-プレイ時間は栞に保存され、kag.getBookMarkPlayTime(num) 
-で取得することができます。
-
-◇その他命令拡張
-
-◆trace (拡張)
-
-配列や辞書を渡した場合に個別の要素の情報が表示されます
-
-◆beginskip (新規)
-
-クリックされた場合に endskip まで強制スキップ処理します。
-beginskip から endskip までのあいだにスキップ関連の
-処理を基本的にいれないでください。誤動作する可能性があります。
-
-※ジャンプなどで別シナリオに遷移した場合は強制解除されます
-※beginskip は入れ子にすることができません。
-
-◆endskip (新規)
-
-特殊スキップモードの終了を示すタグです
-
-● 特殊な仕様変更について
-
-◇ askYesNo 関数の仕様変更
-
-askYesNo 関係の挙動が大幅な仕様変更となっています。
-KAG で独自に使用していた場合はコードを全面的に改定する
-必要があるため注意してください。
-
-従来のもの： 
-
-  askYesNo(メッセージ, タイトル)
-
-　ダイアログが処理が終わるまで TJS の実行がブロックされ、YES/NO の結果が
-　返される
-
-新規のもの：
-
-  askYesNo(メッセージ, タイトル, yesFunc, noFunc, param, doneFunc);
-
-  yesFunc  : YES のときに実行する処理
-  noFunc   : NO の場合に実行する処理
-  param    : それぞれのファンクションに渡すパラメータ
-  doneFunc : yes の場合、no の場合いずれの場合にも実行される処理
-
-  帰り値：なし
-　　
-　注意点：
-　　ただちに実行復帰する「可能性」があるので、それを想定した
-　　実装を行う必要があります。
-
-◇ダイアログレイヤ拡張
-
-
-◇squirrel拡張
-
-squirrel スクリプトをKAGとは別にバックグラウンドでスレッド実行可能です
-
-◆sq (新規)
-
-squirrelスクリプトのスレッド実行。
-指定された squirrel スクリプトをバックグラウンド実行します。
-スクリプトに起動時引数として、kag と渡されたパラメータがそのまま引き渡されます。
-
-属性
-	name	スクリプト識別名
-	storage	スクリプトファイル(.nut)
-
-◆wsq (新規)
-
-squirrelスクリプトの終了待ち
-
-属性
-	name	スクリプト識別名
-	canskip	trueならクリックでキャンセル可能  デフォルト:false
-
-◇モーション拡張
-
-前景レイヤ
-　image タグで、画像データとして *.psb を指定することでモーションを
-　動画として表示できます。
-  layopt タグで再生モーションの切り替えが可能です
-
-メッセージレイヤ
-　モーションをUIとして使うための専用拡張があります
-
-◆motionload (新規)
-
-現在のメッセージレイヤにモーションを読み込みます。
-
-属性
-	storage		モーションファイル名
-	separate	モーション分離指定(default true)
-	width		レイヤ横幅
-	height		レイヤ縦幅
-	left		レイヤ座標X
-	top			レイヤ座標Y
-	motionleft	モーション配置位置X(省略するとセンター)
-	motiontop	モーション配置位置Y(省略するとセンター)
-
-※motionopt のパラメータも合わせて指定可能です
-※sync/wait でカレントに対する wmotion が呼び出されます
-
-◆motionopt (新規)
-
-現在のメッセージレイヤのモーションを制御します
-
-属性
-	stealthchara
-	chara
-	stealthmotion
-	motion
-	tickcount
-	speed
-
-※sync/wait でカレントに対する wmotion が呼び出されます
-
-◆wmotion (新規)
-
-指定されたレイヤのアクションの終了を待ちます。
-指定を省略した場合は全レイヤのアクションの終了を待ちます。
-
-属性
-	layer	レイヤの指定(前景またはメッセージレイヤ)
-	page	表裏の指定
-	canskip	true(デフォルト) を指定するとクリックで待ちをスキップできます
-
-● KAGEX の操作系
-
-KAGEX ショートカット一覧 (基本的に KAG とおなじです）
-
- CONTROL        強制スキップ ※これのみ KAGEX で追加
- RETURN/SPACE   左クリックと等価
- ESCAPE 　      右クリックと等価（通常メッセージ消去）
-
- F 次の選択肢/未読まで進む
- B 前に戻る
- A 自動的に読み進める（ＡＵＴＯ起動）
- S 栞をはさむ（セーブ起動）
- L 栞をたどる（ロード起動）
- R または SHIFT+↑ メッセージ履歴表示
-
- TAB        ボタンフォーカス移動
- カーソル   ボタンフォーカス移動
-
-●システムプロパティ拡張
-
-MainWindow (ksg) に以下のような特殊なシステムパラメータが拡張されています
-
-◆動作制御用変数
-
-allskip     false: 既読のみスキップ true: 全てスキップ
-afterauto   false: 選択肢でAUTO解除 true: 選択後もAUTO継続
-afterskip   false: 選択肢でSKIP解除 true: 選択後もSKIP継続
-nosewhenskip false: スキップ時にSEをならさない true: スキップ時でもSEをならす
-             ※ワールド拡張でのみ有効
-
-◆ボイス動作制御用変数
-
-※これらは KAGEX 単体では意味をもちません。変数に値を格納しているだけです。
-  WORLD 拡張のボイス機能が値として参照しています
-
-voicecut    true: 次のボイス再生前に全ボイスを消去する
-voicecutpage    true: voicecut の効果をページ終了後（次の演出より前）にする
-        false: voicecut の効果を名前表示前にする
-bgmdown     true: ボイス再生時にBGMの音量を下げる
-
-◆コンビニエントプロパティ
-
-textspeed       テキスト速度指定 0〜10　(10だと瞬間表示)
-autospeed       自動再生待ち時間 0〜10
-drawspeed       エフェクト系の描画速度調整 1.0:通常 0:瞬間
-noeffect        drawspeed に対するコンビニエント指定 true/false で指定
-
-wavevolume		マスターボリューム 0〜100
-bgmenable       BGM が有効
-bgmvolume       BGM のボリューム 0〜100
-seenable        SE が有効
-sevolume        SE のボリューム  0〜100
-sysseenable		システムSEが有効
-syssevolume		システムSEのボリューム 0〜100
-
-◆ボイス関連プロパティ・メソッド
-
-※これらは KAGEX 単体では意味をもちません。変数に値を格納しているだけです。
-  WORLD 拡張のボイス機能が値として参照しています
-
-voiceenable                 ボイスが有効
-voicevolume                 ボイスのボリューム 0〜100
-getVoiceOn(name)            指定された名前のキャラのボイスが有効かどうか
-getVoiceVolume(name)        指定された名前のキャラのボイスのボリュームの取得
-setVoiceVolume(name,vol)    指定された名前のキャラのボイスのボリュームの指定
-
-bgvenable                   バックグラウンドボイスが有効
-bgvvolume                   バックグラウンドボイスのボリューム 0〜100
-getBGVVolume(name)          指定された名前のキャラのBGVのボリュームの取得
-
-●自動ラベル処理について
-
-◇概要
-
-KAG での「保存」は、ユーザが明示的につけた「ラベル」単位で行われます。
-
-参考：
-  http://devdoc.kikyou.info/tvp/docs/kag3doc/contents/SaveLoad.html
-
-これは ADV 系のゲームにおいては保存箇所が制限されることになり、
-かなりユーザにとって不便です。
-
-KAGEX では、「自動ラベルモード」があり、これを有効にすると [p] 毎に
-栞への保存が可能になります。ラインモードが有効な場合は仮想的な
-[p] 毎でこれが有効になります。
-
-あわせて既読管理も通常の単純なラベル単位ではなく、
-ラベル＋ラベルからの行カウント単位になり、細かい制御が
-行われるようになります。
-
-以下の変数を指定します。Config.tjs で指定可能です
-
- kag.autoLabelMode      自動ラベルモード。true で有効
- kag.autoLabelType      自動ラベルモードの制御種別指定 0:call 方式 1:行番号方式
- 
-◇call 方式
-
-　古いKAGEX での autoLabelMode です。
-  [p] 毎にcall 処理を呼び出すことでラベルづけする方法です。
-
-　このモードで記録された call から戻る処理の関係で、復帰処理の
-　チェックが厳しく、シナリオデータが書き換わった場合の保存データの
-　復帰がラベルよりも保障されづらくなります。ご注意ください。
-
-◇行番号方式
-
-  新しい方式です。KAG のロード処理と実行系に手をいれることで、
-　近傍のラベルおよびそこからの行カウントでのスキップ処理で
-　情報を記録しています。
-
-　・call を介してないので情報がずれたときも復帰できる可能性が高い
-　・スクリプト作業時にファイル改変によるエラー発生がおこらない
-　
-　などの特徴があります。基本的には新規ではこれを利用することを
-　お勧めします。
-
-　なお、このモードを使う場合は、ラベルとしてのセーブは autoLabelMode = false
-  の場合と同じになるので、シナリオファイル中の要所に保存可能ラベルを
-　手動でうつことで、デバッグメニューの「自動ラベルセーブ」による
-　「前のラベルに戻る」「次のラベルにすすむ」を利用することが可能です。
-
-●ボイスパース機能について
-
-◇概要
-
-ラインモード拡張の応用で、ボイス番号割り当てを、シナリオの流れによるの
-ではなく、ファイル中の絶対位置に応じて処理できるようにすることができます。
-シナリオ中で分岐してもファイル番号指定が変わらないというメリットがあります。
-
-◇指定方法
-
-[parse voice=1]
-
-この命令以降のコマンドをすべて先行でパース処理し、
-専用のボイス処理を埋め込みます。ボイスの扱いが異なります。
-
-・キャラクタのボイス指定機能は常に上書きされるため無意味になります
-・以下の特殊なボイス指定を使います
-
-// ボイス番号指定
-[voice name=キャラ名 voice=123]
-
-// ボイス完全停止（負の数を指定）
-[voice name=キャラ名 voice=-1]
-
-// ボイス単発無視
-[voice name=キャラ名 ignore]
-
-// ボイス単発無視差し替え
-[voice name=キャラ名 ignore replace]
-
-// ボイス単発わりこみ
-[voice name=キャラ名 voice=VOICE123]
-
-// ボイス単発わりこみ（数値の場合）
-[voice name=キャラ名 voice=123 once]
-
-// ボイス単発さしかえ
-[voice name=キャラ名 voice=VOICE123 replace]
-
-// ボイス単発わりこみ（数値の場合）
-[voice name=キャラ名 voice=123 replace]
-
-●デバッグメニュー拡張
-
-KAGEX ではデバッグメニューが従来の KAG から拡張されています
-
-◇デバッグレベル
-
-コンソールに表示されるログの出力レベルを制御します
-なし/シンプル/詳細 から選べます
-
-◇デバッグ窓表示
-
-画面下側に
-
-・現在実行中の　行番号:シナリオ名 ラベル
-・実行中の行の内容
-
-が常に表示されるようになります。
-
-◇KAGEXログモード
-
-有効にすると、KAGEX ワールド拡張の素材関係のエラーログが、
-全部別々に記録されるようになります。
-
-記録されたログは、「KAGEXログを出力する」で、デバッグログフォルダ
-（通常 savedata 以下）にそれぞれ出力されます。
-素材関係の動作チェックに利用できます
+﻿Title: About Kirikiri/KAGEX
+
+Author: Limited Partnership Wamsoft, Tsuyoshi Watanabe
+
+
+
+● Kirikiri/KAGEX Overview
+
+
+
+This is a system that largely extends Kirikiri/KAG, mainly in terms of layer functionality.
+
+
+
+・Layer rotation and scaling processing
+
+・Processing for layer stacking level control
+
+・Layer automatic action processing
+
+
+
+The basic concept of the system remains the same as Kirikiri/KAG, and basic functions
+
+are maintained as they are. Before reading this document, please understand the
+
+entirety of KAG first.
+
+
+
+For details on KAG, please refer to
+
+
+
+ http://devdoc.kikyou.info/tvp/docs/kag3doc/contents/
+
+
+
+.
+
+
+
+● Notices
+
+
+
+fadepausebgm/setbgmlabel/clearbgmlabel/setbgmstop/clearbgmstop 
+
+timeout/ctimeout/click/cclick/wheel/cwheel have been integrated into KAG.
+
+
+
+The origin rule for Affine transformation processing has changed.
+
+In the current system, rotation center = layer origin.
+
+To use the traditional layout, you need to set afx, afy to center
+
+and shift the display coordinates by that amount.
+
+
+
+● Folder Structure
+
+
+
+In principle, it follows KAG.
+
+
+
+krkr.exe        Kirikiri executable file
+
+plugin/         Plugins
+
+tools/          Related tools
+
+savedata/       Save data
+
+data/           Data area
+
+    system/     System files
+
+    bgimage/    For background files
+
+    bgm/        For BGM files
+
+    fgimage/    For foreground files
+
+    image/      Other images
+
+    others/     Other data
+
+    rule/       Rule images for screen updates
+
+    scenario/   Scenario files
+
+    sound/      Sound data
+
+    video/      Video data
+
+    voice/      Voice data
+
+　　main/       System scripts * Added by KAGEX
+
+
+
+    startup.tjs Kirikiri startup file
+
+
+
+Basically, when specifying material files, do not include path names;
+
+the system searches automatically by file name only.
+
+
+
+☆ KAGEX Additional Functions
+
+
+
+You can separately add automatic search paths in Storages.tjs.
+
+Please add descriptions following the format in Initialize.tjs.
+
+
+
+Example
+
+---------------------------------------------------------------
+
+Storages.addAutoPath("thum/"); // Folder for thumbnail images
+
+---------------------------------------------------------------
+
+
+
+● Explanation of Extensions
+
+
+
+◇ Control System Extensions
+
+
+
+◆ Wait Commands General (Extension)
+
+
+
+For wait commands where the wait parameter is specified, after the standard wait action,
+
+the system waits for the additional specified "time".
+
+If the action is cancelled by a click, this additional wait does not occur.
+
+
+
+Attributes
+
+	wait	Additional wait specification (in ms)
+
+
+
+* This extension is invalid for wait, wd, waituntil
+
+
+
+◆ Wait-Enabled Commands General (Extension)
+
+
+
+Attributes have been added to automatically execute a wait action for commands
+
+that have a corresponding wait behavior.
+
+
+
+Attributes
+
+	sync	Execute wait
+
+	wait	Additional wait specification (in ms)
+
+
+
+Supported commands
+
+
+
+ quake, animstart, trans, move, action, 
+
+ fadeinbgm, fadeoutbgm, fadepausebgm, fadebgm, xchgbgm, 
+
+ fadeinse, fadeoutse, fadese,
+
+ playvideo
+
+
+
+◆ Commands General (Extension)
+
+
+
+Commands with the delayrun parameter specified are executed with a delay during wait processing.
+
+
+
+Attributes
+
+	delayrun    Delay parameter specification
+
+				Number: Executed after a delay of the specified time (in ms) or more
+
+                String: Executed at the timing of the corresponding label in BGM/SE
+
+
+
+Delayed execution is cancelled (executed immediately at that point) before page break processing
+
+by lineMode (after waiting for a click) or by the [delaydone] command.
+
+
+
+◆ delaydone (New)
+
+
+
+Forcibly executes all commands whose execution is currently delayed.
+
+
+
+◆ delaycancel (New)
+
+
+
+Cancels all commands whose execution is currently delayed.
+
+
+
+◆ wd (New)
+
+
+
+Delay wait. Waits until the corresponding label in BGM/SE is passed.
+
+If the label has already been passed, it is ignored.
+
+
+
+Attributes
+
+	name	Wait label
+
+	canskip If skippable, true
+
+
+
+◆ td (New)
+
+
+
+Delay execution label registration. Manually registers labels for delay processing
+
+separately from BGM/SE labels.
+
+
+
+Attributes
+
+	Can register arbitrary labels in the form of LabelName=DelayTime.
+
+
+
+◆ waituntil (New)
+
+
+
+Functionally equivalent to the until parameter of waittag.
+
+However, if clicked even once, the time origin of resetwait is cleared and
+
+subsequent waituntil commands are invalidated.
+
+
+
+◆ showwait (New)
+
+
+
+Test command. Logs the difference from the time origin at the moment the command is executed.
+
+
+
+◆ set (New)
+
+
+
+Sets a variable.
+
+
+
+Attributes
+
+	name	Variable name tf.* f.* sf.*
+
+	value	Value (treated as a string)
+
+
+
+◆ func (New)
+
+
+
+Calls a TJS function.
+
+
+
+Attributes
+
+	name	Global function name
+
+	others	Parameters are passed to the function's first argument as a dictionary.
+
+
+
+◇ Layer Extensions
+
+
+
+◆ Non-primary layer status of the base layer
+
+
+
+In KAGEX, the base layer is no longer Window.primaryLayer.
+
+Please be careful.
+
+
+
+◆ Introduction of the level concept to foreground layers
+
+
+
+Original KAG foreground layers have a display order based on numerical order.
+
+KAGEX introduces the concept of "levels", and display order is determined by level units.
+
+
+
+・Layer groups with smaller levels are displayed underneath.
+
+  -> Controllable via the laylevel command.
+
+
+
+・Display control for "frontmost" and "backmost" is possible within the same level.
+
+  -> Controllable via layfront / layback commands.
+
+
+
+◆ image (Extension)
+
+
+
+For foreground layers, in addition to the traditional image,
+
+the following attributes can now be used.
+
+
+
+color, storage, tile, flip are exclusive and valid in this order.
+
+The layer size automatically becomes the size of the loaded material.
+
+
+
+Attributes
+
+	storage	Image specification (Extension)
+
+		・*.emf / *.wmf vector images can also be handled.
+
+		・When *.psb is specified, motion data is loaded.
+
+		  Specify the following additional parameters simultaneously:
+
+			chara			Character specification
+
+			motion			Motion specification
+
+			stealthchara	Hidden replacement of character
+
+			stealthmotion	Hidden replacement of motion
+
+			flags			Motion playback flags
+
+			tickcount		Motion tick value	
+
+			speed			Playback speed specification
+
+
+
+    color   Fill color
+
+    width   Width when filled
+
+    height  Height when filled
+
+
+
+    tile    Image tiling filename. Invalid if color or storage exists.
+
+    tilex   Tile position X
+
+    tiley   Tile position Y
+
+
+
+	clipimage		Clipping image specification
+
+	clipimageleft	Clipping image placement position X
+
+	clipimagetop	Clipping image placement position Y
+
+		When actually displaying on screen, it is displayed cut out using the alpha information of the specified image.
+
+　　　	* Coordinate values for clip images are absolute coordinates relative to the screen.
+
+
+
+	flip		Flip drawing target file. Invalid if color, storage, tile exists.
+
+	fliptype	Specifies the type of flip.
+
+				* If unspecified, the extension of the file specified in flip is also referenced.
+
+				movie:  .mpeg .mpg .wmv
+
+				flash:  .swf
+
+				particle: .tjs
+
+				fire: Unspecified
+
+    movie   Equivalent to flip specification + fliptype:movie  * For compatibility
+
+    fire    Equivalent to flip specification + fliptype:fire   * For compatibility
+
+
+
+
+
+	Optional parameters for movie
+
+	    loop    Specifies whether the video plays in a loop
+
+	    alpha   0: Normal video
+
+    	        1: Alpha video. Top half of screen is RGB, bottom half is Alpha.
+
+        	    2: Alpha video. Left half of screen is RGB, right half is Alpha.
+
+
+
+	Optional parameters for fire
+
+	    firecolor   Fire effect color specification. red, blue, white or 
+
+    	        specify color with 0xRRGGBB. If you chain color specifications with ":" like 
+
+	            0xRRGGBB:0xRRGGBB, it becomes that gradient.
+
+        	    The color written first is the part with higher temperature.
+
+            	Colors are placed purely on average, but if you write multiple ":", 
+
+    	        that part's area becomes longer. Alpha values become linear.
+
+	    firegamma   Specified when directly specifying colors with firecolor and you want the 
+
+	            fluctuation of alpha values to be non-linear.
+
+	    firelayer   Directly specify the fire color map image with a 256x1 size layer.
+
+	    firewidth   Fire effect area size specification. If omitted, original file size.
+
+	    fireheight  Fire effect area size specification. If omitted, original file size.
+
+	    fireleft    Fire effect seed image placement position.
+
+	    firetop     Fire effect seed image placement position.
+
+	    firemargin  Expand the fire effect image area by this amount in all directions.
+
+	    forceh  Horizontal force specification (-8 to 8).
+
+	    forcev  Vertical force specification (-8 to 8).
+
+	    boundRangeH Horizontal bound range 0 to 16.
+
+	    boundRangeV Vertical bound range 0 to 16.
+
+	    scalingCoeff    Scaling coefficient 0 to 0.01.
+
+	    numOfBlurForCoolMap Blur application count 0 to ...
+
+   		textureFilterType Texture filter 0: Nearest Neighbor, 1: Bilinear.
+
+	    coolRange   Set the amplitude of intensity 0 to 256.
+
+    	coolStrength    Intensity 0 to 255.
+
+	    coolParticleDensityDenominator  Cooling particle density denominator 0>.
+
+    	coolParticleDensityNumerator    Cooling particle density numerator 0>.
+
+	    edgeSmoothing　Whether to make the edges of the fire less conspicuous.
+
+
+
+	Optional parameters for flash
+
+		flashwidth
+
+		flashheight
+
+
+
+	Optional parameters for particle
+
+		genratio
+
+		ptidx
+
+
+
+	flipx	Horizontal flip (true/false)
+
+	flipy	Vertical flip (true/false)
+
+	slantx	Horizontal skew rate (%)
+
+	slanty	Vertical skew rate (%)
+
+    zoomx   Horizontal magnification rate (%)
+
+    zoomy   Vertical magnification rate (%)
+
+    zoom    Magnification rate (%) XY simultaneous specification
+
+    rotate  Rotation angle (degrees)
+
+    afx     Rotation/Scaling origin X coordinate. center/left/right 
+
+            or numeric value for coordinates from the top-left corner of the layer.
+
+    afy     Rotation/Scaling origin Y coordinate. center/top/bottom
+
+            or numeric value for coordinates from the top-left corner of the layer.
+
+    dafx    Specifies afx along with default (returns to this value on reset).
+
+    dafy    Specifies afy along with default (returns to this value on reset).
+
+    type    Composition mode
+
+            * http://devdoc.kikyou.info/tvp/docs/kr2doc/contents/index.html
+
+    reset   Initializes all actions and attribute specifications.
+
+            * opacity and type are initialized to those at image load.
+
+
+
+	* Affine transformation is processed in the order of flip -> slant -> zoom -> rotate.
+
+
+
+◆ layopt (Extension)
+
+
+
+For foreground layers, in addition to the traditional layopt,
+
+the following attributes can now be used.
+
+
+
+Attributes
+
+    type    Composition mode
+
+            * http://devdoc.kikyou.info/tvp/docs/kr2doc/contents/index.html
+
+    reset   Initializes all actions and attribute specifications.
+
+            * opacity and type are initialized to those at image load.
+
+    time    Move in specified time.
+
+    accel   Acceleration of movement.
+
+		Negative number: Deceleration
+
+		0: Linear
+
+		Positive number: Acceleration
+
+		"acdec": Acceleration/Deceleration (Cubic curve)
+
+		"accos": Acceleration/Deceleration (Cosine movement)
+
+    nowait  Do not cancel during wait processing.
+
+　　left    Corresponds to time.
+
+    top     Corresponds to time.
+
+    afx     Rotation/Scaling origin X coordinate. center/left/right 
+
+            or numeric value for coordinates from the top-left corner of the layer.
+
+    afy     Rotation/Scaling origin Y coordinate. center/top/bottom
+
+            or numeric value for coordinates from the top-left corner of the layer.
+
+    rotate  Rotation angle
+
+    zoomx   Horizontal magnification rate
+
+    zoomy   Vertical magnification rate
+
+    zoom    Magnification rate
+
+    raster      Amplitude amount of raster scroll
+
+    rasterlines Number of lines for raster scroll
+
+    rastercycle Cycle of raster scroll
+
+    tilex   Tile position X
+
+    tiley   Tile position Y
+
+	clipimage		Clipping image specification
+
+	clipimageleft	Clipping image placement position X
+
+	clipimagetop	Clipping image placement position Y
+
+
+
+　　+ Various flip effect parameters can also be adjusted and specified.
+
+
+
+	Parameters valid only during motion playback:
+
+
+
+	chara			Character specification
+
+	motion			Motion specification
+
+	stealthchara	Hidden replacement of character
+
+	stealthmotion	Hidden replacement of motion
+
+	flags			Motion playback flags
+
+	tickcount		Motion tick value	
+
+	speed			Playback speed specification
+
+
+
+◆ laylevel (New)
+
+
+
+Specifies the display level of the foreground layer.
+
+
+
+Attributes
+
+    layer   Specify layer (Foreground layer only)
+
+    page    Specify front/back screen (defaults to fore if omitted)  
+
+    level   Display level
+
+            Target for grouping in layfront/layback.
+
+            Higher display levels are displayed on top.
+
+
+
+◆ layfront (New)
+
+
+
+Moves the foreground layer to the very front of the same display level.
+
+
+
+Attributes
+
+    layer   Specify layer (Foreground layer only)
+
+    page    Specify front/back screen (defaults to fore if omitted)  
+
+
+
+◆ layback (New)
+
+
+
+Moves the foreground layer to the very back of the layers with the same display level.
+
+
+
+Attributes
+
+    layer   Specify layer (Foreground layer only)
+
+    page    Specify front/back screen (defaults to fore if omitted)  
+
+
+
+◆ wv (Extension)
+
+
+
+When the layer parameter is specified, waits for the completion of video playback on the foreground layer.
+
+
+
+Attributes
+
+    layer   Layer currently playing video. If "all", waits for movies on all layers.
+
+    canskip true if skippable.
+
+
+
+
+
+◆ clearlayers (New)
+
+
+
+Clears the contents of all layers and stops display.
+
+
+
+Attributes
+
+    page    Specify front/back screen
+
+
+
+◆ action (New)
+
+
+
+Specifies automated action drive for a foreground layer.
+
+
+
+Attributes
+
+    layer   Specify layer (Foreground only)
+
+    page    Specify front/back screen
+
+    time    Specifies the time the action is executed. Infinite loop if unspecified.
+
+    delay   Specifies the delay time until the action starts.
+
+    nowait  Disables wait for the action. 
+
+            (Will no longer respond to action release processing of wact or wait).
+
+    action  Direct specification of action (Name of global dictionary or array).
+
+    module  Module specification of action (Old style).
+
+    
+
+* There are attribute parameters for each type of action.
+
+　Please refer to action.txt for action types and their attributes.
+
+
+
+◆ stopaction (New)
+
+
+
+Stops the action of the specified layer.
+
+If specification is omitted, actions on all layers are stopped.
+
+
+
+Attributes
+
+    layer   Specify layer (Foreground only)
+
+    page    Specify front/back screen
+
+
+
+◆ wact (New)
+
+
+
+Waits for the completion of the action on the specified layer.
+
+If specification is omitted, waits for the completion of actions on all layers.
+
+Actions specified with nowait cannot be waited for.
+
+
+
+Attributes
+
+    layer   Specify layer (Foreground only)
+
+    page    Specify front/back
+
+    canskip Value true (default) or false
+
+            If true is specified, the wait can be skipped by clicking.
+
+
+
+◆ wat (New)
+
+
+
+Waits for the completion of actions and transitions on the specified layer.
+
+If specification is omitted, waits for the completion of actions and transitions on all layers.
+
+Actions specified with nowait cannot be waited for.
+
+
+
+Attributes
+
+    layer   Specify layer (Foreground only)
+
+    page    Specify front/back
+
+    canskip Value true (default) or false
+
+            If true is specified, the wait can be skipped by clicking.
+
+
+
+◆ ltbegin (New)
+
+
+
+Start of screen switching using layers.
+
+Performs screen switching using a mask by a layer placed on the very front of the screen.
+
+
+
+Usage
+
+-------------------
+
+[ltbegin]
+
+Place commands for screen switching (Do not perform transitions etc.!)
+
+[ltend]
+
+-------------------
+
+
+
+Attributes
+
+    type    Switching type
+
+             trans   Transition * Default if unspecified
+
+             wipeltor Wipe from left to right
+
+             wipertol Wipe from right to left
+
+             fade    Crossfade
+
+    time    Switching time (1000ms if omitted)
+
+    color   Color used for screen blackout (Black if omitted)
+
+    wait    Wait time after screen blackout
+
+
+
+◆ ltend (New)
+
+
+
+End of screen switching using layers.
+
+
+
+Attributes
+
+    Same as ltbegin. If omitted, remains the previous value.
+
+
+
+◇ Message Window Display System Extensions
+
+
+
+◆ Overview of Extensions
+
+
+
+To be convenient for creating ADV style games,
+
+writing rules have been extended, and it is possible to assign automatic processing
+
+for line breaks.
+
+
+
+Also, extensions have been made internally to support "Name Layer" and "Expression Layer".
+
+
+
+◆ linemode (New)
+
+
+
+Switches the rules for line breaks in KAG.
+
+By using this, it becomes unnecessary to explicitly write
+
+[l] or [cm] etc. in the case of message window style works.
+
+
+
+* Note: When linemode is enabled, the ignoreCR setting becomes forcibly ON.
+
+
+
+Attributes
+
+    mode    line or page
+
+            If unspecified, returns to normal KAG behavior.
+
+
+
+Term Explanation
+
+　Line Break (New Line): A line break caused by a newline code directly entered in the text.
+
+　Empty Line: Refers to one or more consecutive lines containing only line breaks.
+
+
+
+In case of line
+
+    Line Break: Executes [l]
+
+    Empty Line: Ignored
+
+    [p] : Normal function
+
+
+
+In case of page
+
+    Line Break: [p] + Automatic page clear
+
+    Empty Line: Ignored
+
+
+
+In case of vn
+
+    Line Break: Executes [l]
+
+    Empty Line: [p] + Automatic page clear
+
+
+
+In case of tex:
+
+
+
+    Line Break: Ignored
+
+    Empty Line: [p] + Automatic page clear
+
+
+
+In case of free:
+
+
+
+    Line Break: Line Break
+
+    Empty Line: [p] + Automatic page clear
+
+
+
+Line breaks via the [r] tag function purely as line breaks within the message window.
+
+"Automatic clear" is performed by [er] at the "start of text display for the next line".
+
+* If you want to perform this immediately after [p], please enable erafterpage.
+
+
+
+Furthermore, when line mode is enabled, if there is a description like
+
+
+
+【Name/DisplayName】
+
+
+
+at the beginning of a line,
+
+the name display command [dispname name=Name disp=DisplayName] is automatically called.
+
+
+
+◆ nor (New)
+
+
+
+Suppresses the behavior caused by "newline characters (CR)" in line mode processing just once.
+
+Place this at the end of a line when you want to break a line because it is too long
+
+in vn mode etc., but do not want the effect (of a wait).
+
+
+
+◆ afterline (New)
+
+
+
+・After the end of [l] wait upon a line break in line mode
+
+・After the end of [l] wait upon a line break in vn mode
+
+
+
+This is a special internal tag executed at these times.
+
+In KAGEX, it is an empty command.
+
+In the WORLD extension, it is used for delimiter processing of voice history.
+
+
+
+◆ afterpage (New)
+
+
+
+A special internal tag automatically executed after [p] processing.
+
+In KAGEX, it is an empty command.
+
+In the WORLD extension, it is used for delimiter processing of voice history.
+
+
+
+◆ dispname (New)
+
+
+
+A special internal tag for displaying names.
+
+
+
+Attributes
+
+    name    Specifies the name
+
+    disp    Specifies the display name
+
+
+
+In KAGEX, it simply displays the name as text as is.
+
+In the WORLD extension, processing using a name window is called.
+
+
+
+◆ craftername (New)
+
+
+
+Changes the behavior of the line break immediately following the name notation 【Name/DisplayName】 in line mode.
+
+
+
+Attributes
+
+    mode    If true, ignores the line break immediately after the name. If false, treats it as a normal line break.
+
+
+
+--------------------------------------
+
+【Ruriko】Giggle
+
+
+
+【Ruriko】
+
+Giggle
+
+--------------------------------------
+
+
+
+If true, both notations become equivalent.
+
+
+
+◆ erafterpage (New)
+
+
+
+Specifies whether to automatically perform the [er] action immediately after [p].
+
+
+
+Attributes
+
+    mode    If true, the [er] action is performed immediately after the processing of [p].
+
+
+
+Note
+
+　If this is enabled, automatic clearing in line mode
+
+　(clearing immediately before the next text display) is not performed.
+
+
+
+◆ autoindent (New)
+
+
+
+When enabled, if "「" or "『" exists immediately after the name,
+
+indentation processing is automatically performed.
+
+
+
+Attributes
+
+    mode    true or false
+
+
+
+◆ autolabelmode (deprecated)
+
+
+
+** Abolished. Please describe in Config.tjs.
+
+
+
+◇ Message Window UI Extensions
+
+
+
+◆ Overview
+
+
+
+UI functions such as buttons placed in the message window have been extended.
+
+Also, each placed object can be referenced by name via the
+
+layer.names[] property.
+
+
+
+Example
+
+-------------------------------------------------
+
+[current page=fore name=message0]
+
+[button name=auto normal="auto"] // Register button
+
+
+
+Referenceable from tjs with the following description
+
+kag.fore.messages[0].names["auto"]
+
+-------------------------------------------------
+
+
+
+Extensions for general items
+
+
+
+Attributes
+
+    name    Specifies the name of the UI part.
+
+
+
+◆ button (Extension)
+
+
+
+Extended so that image button files can be specified individually.
+
+
+
+Attributes
+
+    normal  Image when normal
+
+    over    Image on mouse over    Same as normal if omitted
+
+    on      Image when pressed     Same as over if omitted
+
+    focus   Image when focused     Same as focus if omitted
+
+    animcount   Specifies the number of patapata (flip) animation patterns
+
+    animtime    Specifies the interval time for patapata animation. 1000/animcount if omitted.
+
+
+
+* About the button animation function
+
+
+
+You can make buttons perform simple patapata (flip-book) animations.
+
+
+
+・The pattern display interval is fixed.
+
+・Simple loop only.
+
+・Display switches one after another through image files connected vertically.
+
+  Specify images that are pre-formatted this way for graphic/normal/over/on/focus etc.
+
+  The vertical height on the button display becomes
+
+  Vertical height of image file / animcount.
+
+
+
+* Need to add notation regarding support for radio buttons and trigger buttons XXX
+
+
+
+◆ slider (New)
+
+
+
+Places a slide bar on the message layer.
+
+
+
+Attributes
+
+    exp         Assignment destination upon commit
+
+    bgcolor     Background color
+
+    opacity     Background opacity
+
+    value       Linked variable name. If specified,
+
+                (1) References the specified variable as the initial value
+
+                (2) Assigns the value to the specified variable upon change
+
+                Performs these actions. If this is specified, onchange and onchangefunc are invalid.
+
+    position    Initial value
+
+    onchange    Variable name to assign the changed value to
+
+    onchangefunc Specifies a function called when changed
+
+                 Called in the form of func(position, dragging);
+
+　　　　　　　　 If specified, onchange is invalid.
+
+
+
+    base        Background image name.
+
+                If specified, width and height become the size of the background image.
+
+    width       Background width
+
+    height      Background height
+
+    tab         Tab image (Batch). Specify an image with normal / on / over arranged horizontally in that order.
+
+    normal      Tab image normal (Separate)
+
+    over        Tab image mouse over (Separate)
+
+    on          Tab image push down (Separate)
+
+
+
+    nohighlicht Do not highlight
+
+    jumpmode    Jump mode (Moves to the location when the slider base is clicked)
+
+
+
+◆ sysbutton (New)
+
+
+
+Places a system button on the message layer.
+
+System buttons are not cleared even by ct.
+
+
+
+Attributes
+
+     Follows button.
+
+
+
+◆ csysbutton (New)
+
+
+
+Clears system buttons.
+
+
+
+◆ uiload (New)
+
+
+
+Reads data from a user interface definition file
+
+and automatically places parts such as buttons.
+
+
+
+Attributes
+
+    page        Target page (fore/back)
+
+    layer       Target message layer
+
+    storage     Definition file to read
+
+    partremove  Target parts to exclude
+
+    partexcept  Target parts to exclude other than specified
+
+
+
+    Two types of files, basename.csv and basename.func, are loaded.
+
+    * Both function the same, but it is assumed that .csv describes only placement,
+
+    and .func describes definitions for functions.
+
+
+
+◇ Selection Function Extensions (New)
+
+
+
+A dedicated selection function different from Link.
+
+
+
+◆ selopt (New)
+
+
+
+Selection condition initialization.
+
+
+
+Attributes
+
+    normal  Button normal image
+
+    over    Button over image
+
+    left    Button placement area left
+
+    top     Button placement area top
+
+    width   Button placement area size
+
+    height  Button placement area size
+
+
+
+◆ seladd (New)
+
+
+
+Registers a choice.
+
+
+
+Attributes
+
+  text    Text to display
+
+　storage File to jump to when selected
+
+  target  Label to jump to when selected
+
+  exp     Code to execute when selected
+
+  eval    Choice display condition
+
+  onceflag Flag specification for display only once (Automatically turns ON)
+
+
+
+  Use exp if you want to perform variable processing, etc., and use
+
+  storage/target if you want to branch directly.
+
+
+
+◆ select (New)
+
+
+
+  Execute selection processing.
+
+
+
+  If storage/target was specified, after the selection processing,
+
+  it jumps to that destination. In the case of exp, execution continues
+
+  from the line following [select].
+
+
+
+Attributes
+
+  storage   File to merge into with the seldone command after selection branching
+
+  target    Label to merge into with the seldone command after selection branching
+
+
+
+◆ seldone (New)
+
+
+
+  Merge processing after selection.
+
+  If storage/target is specified in the choice added with seladd,
+
+　and this command exists, it merges to the storage/target specified in select.
+
+
+
+◆ mselinit (New)
+
+
+
+Initializes map choices. Registered information is cleared.
+
+
+
+◆ mselbutton (New)
+
+
+
+Registers a button for map selection.
+
+
+
+Attributes
+
+    image       Image specification.
+
+    width       Image width specification (Optional)
+
+    height      Image height specification (Optional)
+
+    count       Animation pattern specification within image (Exclusive with height, Optional)
+
+
+
+    The image for map selection should be formatted such that:
+
+     Vertical direction: Animation patterns
+
+　　 Horizontal direction: Arranged in the order of normal over.
+
+　　 Specify the number of animation patterns with count.
+
+
+
+◆ mselpos (New)
+
+
+
+Registers the placement position of the button for map selection.
+
+
+
+Attributes
+
+    name        Name of the position
+
+    left        X direction coordinate
+
+    top         Y direction coordinate
+
+
+
+If multiple selections are specified for the same location,
+
+they are placed in the left-right direction centering on the coordinate position.
+
+
+
+◆ mseladd (New)
+
+
+
+Registers a choice.
+
+
+
+Attributes
+
+  text    Target to display (Registered with mselopt)
+
+  pos     Position to display (Registered with mse)
+
+　storage File to jump to when selected
+
+  target  Label to jump to when selected
+
+  exp     Code to execute when selected
+
+
+
+◆ mselopt (New)
+
+
+
+Specifies options for map choices.
+
+
+
+Attributes
+
+    interval        Animation interval of placed choices
+
+    buttonWidth     Width between buttons when placing multiple buttons
+
+    enterse         SE specification upon enter
+
+    leavese         SE specification upon leave
+
+    clickse         SE specification upon click
+
+    frame           Background image specification
+
+    frameKey
+
+    frameColor
+
+    frameOpacity
+
+
+
+◆ mselect (New)
+
+
+
+  Execute selection processing.
+
+
+
+◆ bradd (New)
+
+
+
+Registers an in-scene branch. Functionally equivalent to constructing with jump.
+
+It is prepared to write in the same style as the select series.
+
+
+
+Attributes
+
+  target  Label to jump to when branching
+
+  exp     Code to execute when branching
+
+  eval    Branch condition
+
+
+
+◆ branch (New)
+
+
+
+  Execute branching.
+
+
+
+  If storage/target was specified, after the selection processing,
+
+  it jumps to that destination. In the case of exp, execution continues
+
+  from the line following [select].
+
+
+
+Attributes
+
+  target    Label to merge into with the brdone command after selection branching
+
+
+
+◆ brdone (New)
+
+
+
+  Merge processing after branching.
+
+  If this command exists after branching with bradd,
+
+  it merges to the target specified in branch.
+
+
+
+◆ next (New)
+
+
+
+Functionally equivalent to jump, but since it includes read counter increment processing,
+
+please basically use this.
+
+* There is no problem if you place a label before jump.
+
+
+
+Attributes
+
+　storage File to jump to
+
+  target  Label to jump to
+
+  eval    Branch condition
+
+
+
+◇ Scene Recollection Function (New)
+
+
+
+Auxiliary functions to realize "Scene Recollection".
+
+
+
+A: Specification within scenario
+
+
+
+1. Enclose the part you want to recall with labels
+
+-------------------
+
+*kaisouBeginNumber
+
+......
+
+*kaisouEndNumber
+
+-------------------
+
+.
+
+
+
+2. You can call the scene recollection with the recollection command by specifying no (number).
+
+
+
+In this method, the recollection process is performed using save data.
+
+Therefore, please be aware that it is affected by inconsistencies in save data.
+
+
+
+B: Preparing a recollection scenario separately
+
+
+
+1. Prepare a scenario for recollection separately from the original main text.
+
+   Put the endrecollection command at the end of that scenario.
+
+2. Call the scene recollection scenario with the recollection command specifying storage/target.
+
+
+
+◆ recollection (New)
+
+
+
+Calls recollection processing. (Equivalent to kag.startRecollection(elm))
+
+Please note that if the call is successful, processing does not return.
+
+
+
+For a call with no to succeed, the label *kaisouBeginNumber needs to
+
+have been passed. You can confirm passage by referencing the system flag
+
+trail_Scenario_*kaisouBeginNumber.
+
+In this case, processing ends at the *kaisouEndNumber label.
+
+
+
+Specification with storage/target is also possible instead of no. In this case,
+
+you can end the recollection with the endrecollection command.
+
+
+
+Attributes
+
+    no Recollection number
+
+    storage Scenario for recollection
+
+    target  Target for recollection
+
+    doneStorage Scenario called after recollection ends
+
+    doneTarget  Label called after recollection ends
+
+
+
+
+
+During recollection processing...
+
+・kag.isRecollection becomes true.
+
+・Bookmark saving related processing is prohibited.
+
+・It is always treated as already read.
+
+
+
+◆ endrecollection (New)
+
+
+
+Ends recollection processing.
+
+Transitions to the end processing registered with recollection.
+
+
+
+◆ stoprecollection (New)
+
+
+
+Forcibly ends recollection processing.
+
+The recollection state is released.
+
+
+
+◆ clearplaytime (New)
+
+
+
+Clears play time information.
+
+Play time is saved in bookmarks and can be obtained with
+
+kag.getBookMarkPlayTime(num).
+
+
+
+◇ Other Command Extensions
+
+
+
+◆ trace (Extension)
+
+
+
+If an array or dictionary is passed, information on individual elements is displayed.
+
+
+
+◆ beginskip (New)
+
+
+
+When clicked, forcibly skips processing until endskip.
+
+Basically, do not include skip-related processing between
+
+beginskip and endskip. It may cause malfunction.
+
+
+
+* Forced release occurs if transitioned to another scenario via jump etc.
+
+* beginskip cannot be nested.
+
+
+
+◆ endskip (New)
+
+
+
+A tag indicating the end of special skip mode.
+
+
+
+● About Special Specification Changes
+
+
+
+◇ Change in specification of askYesNo function
+
+
+
+The behavior related to askYesNo has undergone a major specification change.
+
+Please be careful as you need to completely revise the code if you were
+
+using it uniquely in KAG.
+
+
+
+Previous version: 
+
+
+
+  askYesNo(message, title)
+
+
+
+　Execution of TJS is blocked until the dialog processing is finished, and the YES/NO result is
+
+　returned.
+
+
+
+New version:
+
+
+
+  askYesNo(message, title, yesFunc, noFunc, param, doneFunc);
+
+
+
+  yesFunc  : Processing executed when YES
+
+  noFunc   : Processing executed when NO
+
+  param    : Parameter passed to each function
+
+  doneFunc : Processing executed in either case of yes or no
+
+
+
+  Return value: None
+
+　　
+
+　Note:
+
+　　Since there is a "possibility" of immediate execution return, it is necessary
+
+　　to implement assuming that.
+
+
+
+◇ Dialog Layer Extension
+
+
+
+
+
+◇ squirrel Extension
+
+
+
+It is possible to execute squirrel scripts in a thread in the background separately from KAG.
+
+
+
+◆ sq (New)
+
+
+
+Thread execution of squirrel script.
+
+Executes the specified squirrel script in the background.
+
+kag and the passed parameters are passed as-is to the script as startup arguments.
+
+
+
+Attributes
+
+	name	Script identifier name
+
+	storage	Script file (.nut)
+
+
+
+◆ wsq (New)
+
+
+
+Wait for squirrel script completion.
+
+
+
+Attributes
+
+	name	Script identifier name
+
+	canskip	If true, can be cancelled by clicking. Default: false
+
+
+
+◇ Motion Extensions
+
+
+
+Foreground Layer
+
+　By specifying *.psb as image data with the image tag, motions can be
+
+　displayed as video.
+
+  Playback motion can be switched with the layopt tag.
+
+
+
+Message Layer
+
+　There are dedicated extensions for using motion as UI.
+
+
+
+◆ motionload (New)
+
+
+
+Loads motion into the current message layer.
+
+
+
+Attributes
+
+	storage		Motion file name
+
+	separate	Motion separation specification (default true)
+
+	width		Layer width
+
+	height		Layer height
+
+	left		Layer coordinate X
+
+	top			Layer coordinate Y
+
+	motionleft	Motion placement position X (Center if omitted)
+
+	motiontop	Motion placement position Y (Center if omitted)
+
+
+
+* Parameters of motionopt can also be specified together.
+
+* wmotion for the current is called by sync/wait.
+
+
+
+◆ motionopt (New)
+
+
+
+Controls the motion of the current message layer.
+
+
+
+Attributes
+
+	stealthchara
+
+	chara
+
+	stealthmotion
+
+	motion
+
+	tickcount
+
+	speed
+
+
+
+* wmotion for the current is called by sync/wait.
+
+
+
+◆ wmotion (New)
+
+
+
+Waits for the completion of the action on the specified layer.
+
+If specification is omitted, waits for the completion of actions on all layers.
+
+
+
+Attributes
+
+	layer	Specify layer (Foreground or Message layer)
+
+	page	Specify front/back
+
+	canskip	If true (default) is specified, the wait can be skipped by clicking.
+
+
+
+● KAGEX Operation System
+
+
+
+KAGEX Shortcut List (Basically the same as KAG)
+
+
+
+ CONTROL        Forced skip * Only this is added in KAGEX
+
+ RETURN/SPACE   Equivalent to left click
+
+ ESCAPE 　      Equivalent to right click (Normal message clear)
+
+
+
+ F Proceed to next choice/unread
+
+ B Go back
+
+ A Automatically read forward (Activate AUTO)
+
+ S Insert bookmark (Activate Save)
+
+ L Follow bookmark (Activate Load)
+
+ R or SHIFT+Up Display message history
+
+
+
+ TAB        Move button focus
+
+ Cursor     Move button focus
+
+
+
+● System Property Extensions
+
+
+
+Special system parameters like the following are extended in MainWindow (ksg).
+
+
+
+◆ Operation Control Variables
+
+
+
+allskip     false: Skip only read  true: Skip all
+
+afterauto   false: Cancel AUTO at choice  true: Continue AUTO after selection
+
+afterskip   false: Cancel SKIP at choice  true: Continue SKIP after selection
+
+nosewhenskip false: Do not play SE when skipping  true: Play SE even when skipping
+
+             * Valid only in WORLD extension
+
+
+
+◆ Voice Operation Control Variables
+
+
+
+* These have no meaning in KAGEX alone. They just store values in variables.
+
+  The voice function of the WORLD extension references them as values.
+
+
+
+voicecut    true: Clear all voices before playing the next voice
+
+voicecutpage    true: Apply voicecut effect after page end (before next effect)
+
+        false: Apply voicecut effect before name display
+
+bgmdown     true: Lower BGM volume when playing voice
+
+
+
+◆ Convenient Properties
+
+
+
+textspeed       Text speed specification 0 to 10 (Instant display at 10)
+
+autospeed       Automatic playback wait time 0 to 10
+
+drawspeed       Drawing speed adjustment for effects 1.0: Normal 0: Instant
+
+noeffect        Convenient specification for drawspeed. Specify with true/false
+
+
+
+wavevolume		Master volume 0 to 100
+
+bgmenable       BGM is enabled
+
+bgmvolume       BGM volume 0 to 100
+
+seenable        SE is enabled
+
+sevolume        SE volume 0 to 100
+
+sysseenable		System SE is enabled
+
+syssevolume		System SE volume 0 to 100
+
+
+
+◆ Voice Related Properties/Methods
+
+
+
+* These have no meaning in KAGEX alone. They just store values in variables.
+
+  The voice function of the WORLD extension references them as values.
+
+
+
+voiceenable                 Voice is enabled
+
+voicevolume                 Voice volume 0 to 100
+
+getVoiceOn(name)            Whether the voice of the character with the specified name is enabled
+
+getVoiceVolume(name)        Get the volume of the voice of the character with the specified name
+
+setVoiceVolume(name,vol)    Specify the volume of the voice of the character with the specified name
+
+
+
+bgvenable                   Background voice is enabled
+
+bgvvolume                   Background voice volume 0 to 100
+
+getBGVVolume(name)          Get the volume of the BGV of the character with the specified name
+
+
+
+● About Automatic Label Processing
+
+
+
+◇ Overview
+
+
+
+"Saving" in KAG is performed in units of "labels" explicitly attached by the user.
+
+
+
+Reference:
+
+  http://devdoc.kikyou.info/tvp/docs/kag3doc/contents/SaveLoad.html
+
+
+
+In ADV type games, this restricts save points,
+
+which is quite inconvenient for users.
+
+
+
+In KAGEX, there is an "Automatic Label Mode", and enabling this allows saving
+
+at every [p]. If line mode is enabled, this becomes effective at every
+
+virtual [p].
+
+
+
+Accordingly, read management is also not in units of normal simple labels,
+
+but in units of labels + line count from the label, enabling fine-grained control.
+
+
+
+Specify the following variables. Can be specified in Config.tjs.
+
+
+
+ kag.autoLabelMode      Automatic Label Mode. Enabled with true.
+
+ kag.autoLabelType      Specification of control type for Automatic Label Mode 0: call method 1: line number method
+
+ 
+
+◇ call Method
+
+
+
+　This is the autoLabelMode in old KAGEX.
+
+  It is a method of labeling by calling call processing at every [p].
+
+
+
+　Due to the process of returning from the call recorded in this mode, the check for
+
+　restoration processing is strict, and restoration of saved data when scenario data
+
+　is rewritten is harder to guarantee than with labels. Please be careful.
+
+
+
+◇ Line Number Method
+
+
+
+  This is a new method. By modifying KAG's load processing and execution system,
+
+　information is recorded by the nearby label and the skip processing by line count
+
+　from there.
+
+
+
+　・Since it does not go through call, there is a high possibility of restoration even when information shifts.
+
+　・Errors due to file modification during scripting work do not occur.
+
+　
+
+　It has such features. Basically, it is recommended to use this for new projects.
+
+
+
+　Note that when using this mode, saving as a label is the same as when autoLabelMode = false,
+
+  so by manually placing savable labels at key points in the scenario file,
+
+　it is possible to use "Return to previous label" and "Proceed to next label"
+
+　via the "Automatic Label Save" of the debug menu.
+
+
+
+● About Voice Parse Function
+
+
+
+◇ Overview
+
+
+
+An application of line mode extension, this allows voice number assignment to be processed
+
+according to the absolute position in the file rather than by the flow of the scenario.
+
+It has the merit that the file number specification does not change even if there is branching in the scenario.
+
+
+
+◇ Specification Method
+
+
+
+[parse voice=1]
+
+
+
+All commands after this instruction are parsed in advance,
+
+and dedicated voice processing is embedded. The handling of voice differs.
+
+
+
+・The character voice specification function is always overwritten, so it becomes meaningless.
+
+・Use the following special voice specifications:
+
+
+
+// Voice number specification
+
+[voice name=CharName voice=123]
+
+
+
+// Voice complete stop (specify a negative number)
+
+[voice name=CharName voice=-1]
+
+
+
+// Voice single-shot ignore
+
+[voice name=CharName ignore]
+
+
+
+// Voice single-shot ignore replacement
+
+[voice name=CharName ignore replace]
+
+
+
+// Voice single-shot interrupt
+
+[voice name=CharName voice=VOICE123]
+
+
+
+// Voice single-shot interrupt (in case of number)
+
+[voice name=CharName voice=123 once]
+
+
+
+// Voice single-shot replacement
+
+[voice name=CharName voice=VOICE123 replace]
+
+
+
+// Voice single-shot interrupt (in case of number)
+
+[voice name=CharName voice=123 replace]
+
+
+
+● Debug Menu Extension
+
+
+
+In KAGEX, the debug menu has been extended from the traditional KAG.
+
+
+
+◇ Debug Level
+
+
+
+Controls the output level of logs displayed on the console.
+
+Choose from None/Simple/Detail.
+
+
+
+◇ Debug Window Display
+
+
+
+On the bottom side of the screen,
+
+
+
+・Currently executing Line Number: Scenario Name Label
+
+・Content of the executing line
+
+
+
+will always be displayed.
+
+
+
+◇ KAGEX Log Mode
+
+
+
+When enabled, error logs related to materials in the KAGEX WORLD extension
+
+will be recorded all separately.
+
+
+
+Recorded logs are output to the debug log folder (usually under savedata)
+
+via "Output KAGEX Log".
+
+It can be used to check the operation of materials.

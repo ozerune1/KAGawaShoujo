@@ -1,921 +1,1431 @@
-﻿Title: 吉里吉里/KAGEX ワールド拡張機能
-Author: 合資会社ワムソフト 渡邊剛
-
-●KAGEX ワールド拡張機能概要
-
-KAGEX からさらに world.ks をプラグインとして読み込むことで
-特殊な「ワールド機能」が使えるようになります。
-
-ワールド拡張では、ゲームを構成する要素を「オブジェクト」とみなして、
-そのオブジェクトに対して操作をおこなっていくスタイルの記述となります
-
-環境      : システム全体とカメラの制御
-舞台      : 場所と背景に伴う「背景画像」を制御するための専用オブジェクト
-イベント  : 「イベント画像」を制御するための専用オブジェクト
-キャラクタ: 「キャラクタ画像」の立ち絵やボイスなどを制御するオブジェクト
-レイヤ    : 画面効果素材としての「レイヤ画像」を制御しするオブジェクト
-
-いずれのオブジェクトも次のような特徴をもちます
-
-(1) KAG における「属性」の名前をコマンドとみなす
-(2) KAG における「属性値」をそのコマンドに対するパラメータとみなす
-
-●大きい仕様変更について
-
-・hide系命令は廃止されました。all系命令 + hide を代わりにつかって下さい
-・clear命令は廃止されました。all系命令 + hide を代わりにつかって下さい
-・newchar/delchar、newlayer/dellayer は命令は残ってますが deprecatedです。
-　生成には char / layer を、削除はそれぞれのオブジェクトの delete 
-　コマンドを使って下さい
-
-●導入方法
-
-デフォルトでは自動的に導入されます。使わない場合は
-global.worldEnabled を startup.tjs などで false にしておいてください。
-
-●拡張タグ
-
-◇基本処理の拡張
-
-KAGEX のタグの処理が次のように拡張されます
-
-・ENV タグは「環境」に対するコマンドになります。
-・STAGE または BG タグは「舞台」に対するコマンドになります。
-・EVENT または EV タグは「イベント」に対するコマンドになります。
-・CHAR タグは name オプションとあわせて「キャラクタ」に対するコマンドになります
-・LAYER タグは name オプションとあわせて「レイヤ」に対するコマンドになります
-・タグ名に合致する場所指定、時間指定、アクション指定のコマンドがある場合は、
-　「舞台」に対するコマンドになります
-・タグ名に合致するキャラクタが存在する場合は該当キャラに対するコマンドになります
-・タグ名に合致するレイヤが存在する場合は該当レイヤに対するコマンドになります。
-・タグ名に合致する「環境」のコマンドはそのまま機能します
-・名前処理機能はキャラクタボイスと同期して処理されます。
-
-・BGM タグは 「ＢＧＭオブジェクト」に対するコマンドになります
-
-  ※"bgm" で始まる指定は、それをファイル名とみなした
-　  [BGM play=名前] と等価の扱いになります。
-
-・SE タグは「ＳＥオブジェクト群」に対するコマンドになります。
-
-  ※"se" で始まる名前の指定を行った場合、その名前で
-　  再生中の se に対する指定とみなされます
-　再生中の se がない場合は [SE play=名前] と等価の扱いになります。
-
-・遅延実行(delayrun)の解除条件が追加されます
-
-　文字列指定は、ボイス中のラベルにも反応します
-　文字列指定は、ボイス再生が無かった場合は強制的に冒頭での実行になります。
-  ボイス中のラベルは、本来の名前のほか、登場順に vl1, vl2, vl3 ... 
-　という別名で機能するようになってます。
-  また、ボイス終了時に仮想ラベル vlstop が処理されます。
-
-◇自動フラグ処理
-
-・イベントまたは舞台に"EV"ではじまる画像を描画した場合、
-　sflags に 「cg_名前」という値が自動的に登録されます。
-
-・BGM タグを使ってBGMを再生した場合、
-　sflags に 「bgm_名前」という値が自動的に登録されます。
-
-・キャラクタボイス再生時に sflags に「voice_ボイス定義名] のフラグが
-　自動的に登録されます
-
-
-・レイヤに画像を描画した場合、
-　sflags に 「cg_名前」という値が自動的に登録されます。
-
-・レイヤにタイル画像を描画した場合、
-　sflags に 「tile_名前」という値が自動的に登録されます。
-
-・レイヤにGFX系エフェクトを表示した場合、
-  sflags に 「autoflag定義名_名前」という値が自動的に登録されます。
-
-◇命令の拡張
-
-◆begintrans/endtrans
-
-画面全体へのトランジションを実行します
-
-・begintrans を実行すると表画面の内容が裏画面にコピーされます
-・これ以降、endtrans 命令を実行するまで、環境関係オブジェクトの描画
-　はすべて裏画面に対して実行されます
-・endtrans を実行すると指定されたパラメータで画面全体への
-  トランジションを実行します
-
-begintransの属性
-    trans   トランジション名指定（※詳細は後述）
-    fade    フェード指定ショートカット（※詳細は後述）
-	nosync	全体トランジションを非同期実行します
-
- ※ltbegin/ltend も同様に機能するように調整されています
-
-◆msgoff
-
-メッセージ窓を消去します.
-
-属性
-    trans   トランジション名指定
-    fade    フェード指定
-    nofade  自動フェードを抑制する
-
-trans も fade も指定しなかった場合は、
-裏表画面ではなく不透明度を利用した規定のフェード処理が行われます。
-※この場合のフェード時間は kag.messageeFadeTime で指定可能です
-
-◆msgon
-
-メッセージ窓を表示します
-
-属性
-    trans   トランジション名指定
-    fade    フェード指定
-
-msgoff 同様、trans も fade も指定しない場合は規定のフェード処理になります。
-
-◆layer
-
-レイヤオブジェクトに対する命令として機能します
-マクロなどでレイヤ名をパラメータ指定したい場合に使用できます
-存在しないレイヤを指定した場合は自動的に作成されます。
-
-属性
-    name    レイヤの識別名です
-
-◆char
-
-環境キャラクタオブジェクトに対する命令として機能します
-マクロなどでレイヤ名をパラメータ指定したい場合に使用できます
-存在しない名前を指定した場合は自動的に作成されます。
-
-属性
-    name    キャラクタ名を指定します
-    initname    初期化名
-
-◆allse
-
-全SEに対して同じ命令を実行します
-
-◆showvoiceinfo
-
-◆twait または *
-
-メッセージ表示開始からの時間またはボイス中のラベルを待ちます｡
-基本的には delayrun 指定と組み合わせて使うことになります。
-
-属性
-	name	ボイスラベル指定
-	time	待ち時間指定
-
-属性が未指定の場合はテキスト中で登場した順に vl1, vl2, vl3
-といったボイス中の自動ラベル指定を待ちます。
-
-例：テキスト中でラベル登場するタイミングで [*] をいれればＯＫということです
-
-[あかり 驚き]
-[あかり びっくり delayrun=vl1]
-[あかり 泣く delayrun=vl2]
-【あかり】えっ、[*]えっ、[*]そんな〜
-
-◆showtwait
-◆laytrans
-◆ltbegin/end 拡張
-
-◇all系命令
-
-画像系のオブジェクトを一括処理したい場合に all〜 ではじまる記述を
-使うことができます。これらのコマンドは基本的にはその時点で表示されている
-オブジェクトに対して一つ一つ同じコマンドを並べたのと同じ意味をもちます。
-つまり、トランジションなどが同期している場合は一つづつ順に実行されます。
-全部同時に動作させたい場合は
-
-a. nosync 指定をつけて全部非同期動作させる
-b. all 指定をつけて全体トランジションさせる
-
-のいずれかを行ってください
-
-※これらが未指定の場合のデフォルト値を envinit.tjs で定義できます
-allnosync : デフォルトで nosync 指定をしたと見なす
-allall    : デフォルトで all 指定をしたと見なす
-
-共通属性
-	poscond 対象がキャラの場合の表示位置を限定する(pos指定と同じものを指定)
-	vcond	対象にする表示状態を限定する
-			true:表示されてるもの(デフォルト) 
-			false:非表示のもの
-			all:全て
-	all		全体をbegintrans/endtransで囲んだ状態で実行します
-
-※記述例
-　非表示のレイヤをすべて破棄
-  [alllayer delete vcond=false]
-
-◆allchar	表示されている全キャラに対して同じ命令を実行します
-◆alllayer	表示されている全レイヤに対して同じ命令を実行します
-◆allfore	表示されている全キャラ/レイヤに対して同じ命令を実行します
-◆allbase	表示されているイベント絵/舞台に対して同じ命令を実行します
-◆allimage	表示されている画像オブジェクト全てに対して同じ命令を実行します
-
-●ワールド拡張における記述の省略
-
-ワールド拡張ではさまざまな省略記法が有効です。
-
-◇環境属性指定の省略
-
--------------------------
-[stage stage=学校]
--------------------------
-
-舞台を「学校」に指定する表記です
-登録済みの名前がほかの指定とかぶらない場合、これは次のように省略可能です
-
--------------------------
-[stage 学校]
--------------------------
-
-◇環境名の省略
-
-属性値がほかのタグとかぶってない場合は、さらに次のように省略可能です。
-
--------------------------
-[学校]
--------------------------
-
-「学校」というタグは存在しないため、舞台に対する命令におきかえて
-実行され、[stage 学校] と等価になります。
-
-◇キャラクタ指定
-
--------------------------
-[みなせ dress=制服 pos=中]
--------------------------
-
-「みなせ」というタグも、環境に対する命令も存在しないため、
-「みなせ」というキャラクタに対する命令として処理します。
-※キャラクタがあらかじめ envinit.tjs に登録されている必要があります。
-
- newlay で作成したレイヤも同様の動作になります
-
-◇キャラクタ属性の省略
-
--------------------------
-[みなせ 制服 中]
--------------------------
-
-環境と同様、名前がほかと重複してない場合、
-パラメータ名の指定は省略できます。レイヤも同様です。
-
-◇キャラクタのボイス再生
-
----------------------------------------------
-【妙/声】「起きて……ねぇ、起きてってば……」
----------------------------------------------
-
-・キャラクタ「妙」のその時点での既定のボイスを再生します
-・メッセージ窓に「声」として名前を表示します
-・メッセージ窓の表情欄を「妙」の現在の表情＋ポーズで自動表示します
-
-
-
-    voice       次に鳴らすボイスを指定します
-　　　           数値:   再生数値カウンタを指定する
-        　　　   文字列: １回再生にわりこむ
-            　　 ignore: １回だけ再生を無視する（文字列扱い）
-
-　  once        数値指定で１回再生にわりこみます（文字列扱いになる）
-　  incvoice    文字列指定の時にも数値カウンタをあげる
-    noincvoice  数値カウントをあげない（incvoice より強い指定）
-
-    clearvoice  次からボイス再生を停止します（初期状態に戻す）
-    nextvoice   指定すると次のほかのキャラのボイス再生と同時にボイス再生します
-
-
-
-
-
-●環境オブジェクトの機能
-
-◆KAGコマンド
-
-    init        状態を初期化します。
-                キャラクタとレイヤすべて消去され、
-                舞台やイベントも表示なしの状態になります。
-    nostopbgm   init時にBGMを継続させます
-
-	-- 全体補正 --
-
-	個別オブジェクトの補正コマンドと同一のものが指定可能です。
-　　ここで指定されたものは全てのオブジェクトに反映されます。
-	空文字指定または resetcolor で解除されます
-
-    script      画像加工ファンクションを指定します
-    noise       画像にノイズ処理を行います 0〜255
-    contrast    画像のコントラストを補正します -100〜100
-    brightness  画像の明度を補正します -255〜255
-    hue         画像の色相を補正します -180〜180(度)
-    saturation  画像の彩度を補正します -100〜100(%)
-    luminance   画像の輝度を補正します -100〜100(%)
-    filter      画像に色マスクでフィルタを書けます。
-    blurx       ボックスブラーX量
-    blury       ボックスブラーY量
-    blur        ボックスブラーXY同時指定
-    grayscale   画像の表示がグレースケールになります
-    rgamma      画像のRガンマ補正を行います
-    ggamma      画像のGガンマ補正を行います
-    bgamma      画像のBガンマ補正を行います
-
-    resetcolor  補正指定を初期化します
-
-	-- カメラ制御 --
-
-    shiftx      画面全体のシフト量X time,accel,nowait有効
-    shifty      画面全体のシフト量Y time,accel,nowait有効
-    camerax     カメラの位置指定X time,accel,nowait有効
-    cameray     カメラの位置指定Y time,accel,nowait有効
-    camerazoom  カメラのズーム指定 time,accel,nowait有効
-	camerarotate カメラの回転指定 time,accel,nowait有効
-    resetcamera カメラの位置の初期化 time,accel,nowait有効
-
-	cameraox	カメラの消失点を指定します
-	cameraoy	カメラの消失点を指定します
-	resetcameraorigin
-				消失点を初期状態(背景で指定されたもの)に戻します
-
-    actioncamera カメラアクションの指定(actionコマンドと同等の指定)
-    stopcamera  カメラアクションの停止(stopactionと等価)
-    camerach	指定されたキャラの顔の位置をカメラ移動の原点とする
-				※立ち絵で未定義の場合はエモーション原点が参照される
-
-    reset       resetcolor と resetcamera を実行します
-
-◆プロパティ
-
-    actioncamera コマンドで以下のプロパティをアクション指定可能です
-
-    shiftx      	画面全体のシフト量X
-    shifty      	画面全体のシフト量Y
-    camerax     	カメラの位置指定X
-    cameray     	カメラの位置指定Y
-    camerazoom  	カメラのズーム指定
-	camerarotate	カメラの回転指定
-
-●レイヤ系オブジェクトの機能
-
-◇共通機能
-
-舞台、イベント、キャラクター、レイヤそれぞれで
-共通的に使うことができるコマンド群です。
-
-◆KAGコマンド
-
-    orx         表示原点指定X座標 center/left/right/数値
-    ory         表示原点指定Y座標 center/top/bottom/数値
-    vorigin     表示原点指定(orx,oryと等価)。
-                左上すみから時計まわりに 123456789(9は中央)
-                デフォルトは画面中央
-
-    xpos        X位置指定。初期化・相対指定有効 ※アクションパラメータ名は left
-    ypos        Y位置指定。初期化・相対指定有効 ※アクションパラメータ名は top
-
-    opacity     不透明度(0-255)。初期化・相対指定有効
-
-	flipx		横反転 true/false
-	flipy		縦反転 true/false
-	slantx		横傾斜率（％)。初期化・相対指定有効
-	slanty		縦傾斜率（％)。初期化・相対指定有効
-    zoomx       横拡大率（％）。初期化・相対指定有効
-    zoomy       縦拡大率（％）。初期化・相対指定有効
-    zoom        拡大率（％）。初期化・相対指定有効 ※XY同時指定
-    rotate      回転角度（度）。初期化・相対指定有効
-
-    afx         回転原点指定X座標 center/left/right/数値
-    afy         回転原点指定Y座標 center/top/bottom/数値
-    origin      回転原点(afx,afyと等価)指定
-                左上すみから時計まわりに 123456789(9は中央)
-
-    time        アクション動作時間指定(ms) 
-    accel       アクション指定の追加パラメータ。
-		負の数:減速
-		0:線形
-		正の数:加速
-		"acdec"：加減速運動（３次曲線）
-		"accos"：加減速運動（コサイン移動）
-
-    action      アクション名指定（※詳細後述)
-    stopaction  アクション強制停止
-	path		move互換移動処理をアクション実行。
-    spline		アクションのパス移動指定のスプライン化
-
-    trans       トランジション名指定（※詳細後述）
-    notrans     トランジション無効指定
-    stoptrans   トランジション強制停止
-
-    fade        特殊トランジション指定
-                 表示される場合 [対象 opacity=255:0 time=時間] と等価
-                 消去される場合 [対象 opacity=0 time=時間] と等価
-                 更新時 [対象 trans=crossfade time=時間] と等価
-                 ※時間を省略した場合はenvinit.tjs で定義した時間
-
-    sync        アクション/トランジションの同期指定
-    nosync      アクション/トランジションの非同期指定
-    nowait      アクション/トランジションの強制同期の回避
-	wait		同期後の待ち指定追加。パラメータ無しだとsyncと等価
-				wait=数値 で追加時間待ち指定を追加
-    waitmovie   レイヤムービー再生待ち
-    waitanim    レイヤアニメ再生待ち
-
-    show        レイヤを表示する
-    hide        レイヤを消去する
-
-    type        レイヤ合成モード
-
-    --  特殊画像補正処理 -------------------------------------
-
-    これらの処理は画像が動的に加工処理されます。
-    処理のためやや時間がかかります。
-
-    script      画像加工ファンクションを呼び出して
-                画像加工します。カンマ区切りで最初のパラメータが関数名、
-                残りは引数になります。
-
-	　　　　　　ファンクション定義は、envscript.tjs に名前と対応した
-                辞書として記述するか、script_名前.tjs の形で
-                個別の関数定義ファイルを作成します
-    
-    noise       画像にノイズ処理を行います 0〜255
-
-    contrast    画像のコントラストを補正します -100〜100
-    brightness  画像の明度を補正します -255〜255
-
-    hue         画像の色相を補正します -180〜180(度)
-    saturation  画像の彩度を補正します -100〜100(%)
-    luminance   画像の輝度を補正します -100〜100(%)
-
-    filter      画像に色マスクでフィルタを書けます。
-        　　    書式: 0xAARRGGBB:合成モード指定
-
-    blurx       ボックスブラーX量
-    blury       ボックスブラーY量
-    blur        ボックスブラーXY同時指定
-
-    grayscale   画像の表示がグレースケールになります
-    rgamma      画像のRガンマ補正を行います
-    ggamma      画像のGガンマ補正を行います
-    bgamma      画像のBガンマ補正を行います
-
-    ----------------------------------------------------------
-
-    raster      ラスタースクロール効果の振幅を指定します
-    rasterlines ラスタースクロール効果の上下ライン数の範囲を指定します
-    rastercycle ラスタースクロール効果の波の表示周期を指定します
-    
-    resetpos    xpos, ypos, rotate, zoom, afx, afy, raster の初期化
-    resetcolor  type,noise,grayscale,rgamma,ggamma,bgamma,
-                contrast, brightness, hue, saturation, luminance, 
-                blurx,blury,filter 
-                を初期化します
-    reset       resetpos, resetcolor を一度に実行
-
-    noshift     カメラ機能のシフト処理対象からはずします(生成時指定)
-    nocamera    カメラ機能のカメラ処理対象からはずします(生成時指定)
-
-    ※初期化指定
-        通常の記述  data = to
-        初期化指定  data = to:from
-        コロンで区切ってパラメータを多重にすると、
-        (1) from の値で即時に初期化
-        (2) to の値にむかって変動
-        という動きになる。time 指定がある場合のみ意味がある
-
-    ※相対指定
-
-     @100 , @-100 などのように、頭に@をつけると
-     現在の値からの相対指定になります。
-
-     100%, @100% などのように、末尾に% をつけると最大値
-　　　・座標だと画面の端
-　　　・もともとが％指定ならそのまま
-　　　・回転だと 360度
-     に対する%指定になります
-
-◆プロパティ
-
-    action 機能の制御対象として指定可能なパラメータです
-
-    left        レイヤ画像の表示位置
-    top         レイヤ画像の表示位置
-    opacity     レイヤ画像の不透明度(0〜255)
-    rotate      レイヤ画像の回転量(度)
-    zoom        レイヤ画像の拡大率(％)
-    raster      ラスター振幅量
-
-
-●舞台オブジェクトの機能
-
-◆KAGコマンド
-
-    stage       舞台名を指定します。省略表記可能
-                舞台はあらかじめ envinit.tjs で登録しておきます。
-
-    stime       舞台の時間名を指定します。省略表記可能
-                時間はあらかじめ envinit.tjs で登録しておきます。
-                ※時間ごとに色補正パラメータが指定できます
-
-	nolayer		舞台効果レイヤを表示しません
-
-
-●キャラクタ・レイヤ共通機能
-
-◇削除指定
-
-◆KAGコマンド
-	delete	キャラクタやレイヤのオブジェクトを破棄します
-			dellay, delchar 相当の処理になります
-
-◇表示レベル指定
-
-◆KAGコマンド
-
-    front   キャラクタ立ち絵の重なり順を同じレベル内での一番上にします
-    back    キャラクタ立ち絵の重なり順を同じレベル内での一番下にします。
-    level   表示レベルを指定します
-
-
-●キャラクタオブジェクトの機能
-
-◇立ち絵指定
-
-◆KAGコマンド
-
-    dress       ポーズの服装のバリエーションを指定します
-                例：制服/私服/パジャマ などなど
-
-    pose        キャラクタのポーズを指定します
-                ※「表情」を使いまわしできるものが 同一ポーズ扱いになります。
-
-    face        ポーズの表情のバリエーションを指定します
-                例：笑/泣/怒
-
-    image       キャラクタの立ち絵画像を直接指定します。
-                image が有効な場合は pose 系の指定は無視されます。
-                pose 系の指定を再度行うことで解除できます。
-
-    pos         立ち絵を表示する位置を指定します。初期化指定有効
-                前後指定（レベル指定）と左右指定は独立して指定できます。
-
-    ※いずれも指定するパラメータ名（文字列）は envinit.tjs で登録しておきます
-
-    facewin
-    faceon
-    faceoff
-	
-	facepose	表情のポーズを別に指定する場合に指定します。空文字で解除されます
-
-◇ボイスの指定
-
-行頭に【名前】の記述があった場合、自動的にボイス再生されます。
-
-基本動作
-　・数値指定してあると書式にしたがったボイスが再生され、
-　　数値カウンタがインクリメントされます
-　・文字列指定がある場合、数値指定に優先して再生され、
-　　数値カウンタは変更されません
-　・文字列指定は１回かぎり有効です
-
-◆KAGコマンド
-
-    playvoice   指定したボイスを直接再生します。
-                ボイス名を指定時はボイスカウントには影響はありません
-                未指定時は内部カウントを参照して動作し、
-                カウントはインクリメントされます。
-    
-    waitvoice   再生中のボイスの終了を待ちます。
-                指定が true (デフォルト) の場合はクリックによる
-                キャンセルが有効です。false指定でクリック抑制されます
-
-    stopvoice   ボイス再生を強制停止します
-
-    bvoice      裏でループ再生されるボイスを指定します。
-                該当キャラの他のボイス再生中は停止します。ボイスがとまると
-                再開してループ再生されます。空文字を指定すると停止します。
-	補助パラメータ
-	loop	ループ指定します
-
-例:ボイス番号を指定して再生
-------------------------------------
-[妙 voice=1000]
-【妙】おはよう
-------------------------------------
-
-例:ボイスファイルを指定して再生
-------------------------------------
-[妙 voice="tae1000"]
-【妙】おはよう
-------------------------------------
-
-例: 次からボイス再生をなくす
-------------------------------------
-[妙 clearvoice]
-------------------------------------
-
-例:１つボイスがぬけていた場合の対応
-------------------------------------
-[妙 voice=1000 once]
-【妙】おはよう
-------------------------------------
-
-例:１つボイスを差し替えた場合の対応
-------------------------------------
-[妙 voice=1000 once incvoice]
-【妙】おはよう
-------------------------------------
-
-例:１つ無音を挟む場合の対応（カウントは継続）
-------------------------------------
-[妙 voice=ignore]
-【妙】……
-------------------------------------
-
-例:１つボイスを無しにする場合の対応（該当カウントを破棄）
-------------------------------------
-[妙 voice=ignore incvoice]
-【妙】……
-------------------------------------
-
-・環境の初期化処理ですべてのキャラクタのボイスは「なし」に初期化されます
-・数値指定の場合の実際のファイル名は envinit.tjs で書式指定します。
-
-※ボイス指定時の待ち時間について
-
-ボイス再生が行われた場合、
-自動再生時のページまちでの待ち時間が次のように変更されます。
-
-通常
-　指定した時間だけまつ
-ボイス再生時
-　待ちが開始した時点での残りボイス時間（ボイス長さから算出）＋指定した時間まつ
-クリックすることで待ちは解除されて次の会話に処理が進行します。
-
-◇エモーション機能
-
-
-●レイヤの機能
-
-◆KAGコマンド
-
-    width   画像サイズ指定
-    height  画像サイズ指定
-
-    file    画像読み込み指定
-    noflag  読み込み時に既読フラグを立てない
-
-    color   色指定 0xAARRGGBB で指定
-
-	mask	画像を指定画像のαで切り抜く
-	maskleft マスク位置調整
-	masktop  マスク位置調整
-
- 	clip    画像で表示をクリッピングする
-	xclip   表示クリッピング画像のX位置 ※アクションパラメータ名は clipImageLeft
-	yclip   表示クリッピング画像のY位置 ※アクションパラメータ名は clipImageTop
-
-	※maskは画像そのものを加工します。
-　　　clipは該当オブジェクトの表示領域をリアルタイムでクリップします
-
-    movie   動画指定
-    loop    動画ループ指定
-    alpha   動画アルファ指定 0:αなし 1:α画像（縦配置) 2:α画像（横配置）
-
-    tile    タイル画像指定。指定されたサイズで画面がしきつめられます
-    tilex   タイルXオフセット
-    tiley   タイルYオフセット
-
-    copy    別レイヤの属性を複製する
-
-    fire        炎エフェクト種画像指定
-    firecolor   炎エフェクトカラー指定 red, blue, white または 
-            0xRRGGBB で色指定。色指定を 0xRRGGBB:0xRRGGBB と ":" で
-            連ねると、そのグラデーションになります。
-            先に記述したほうが温度が高い部分の色です。
-            平均的に色配置されますが、":" を複数記述するとその
-            部分の領域が長くなります。α値は線形になります
-    firegamma   firecolor で直接色指定した場合、それのα値の変動を
-            線形でなくする場合に指定します。
-    firelayer   256×1 サイズのレイヤで炎の色マップ画像を直接指定します
-    firewidth   炎エフェクト領域サイズ指定。省略時は元ファイルサイズ
-    fireheight  炎エフェクト領域サイズ指定。省略時は元ファイルサイズ
-    fireleft    炎エフェクト種画像配置位置
-    firetop     炎エフェクト種画像配置位置
-    firemargin  炎エフェクト画像領域を前後左右にこれだけ拡張
-    forceh  横方向フォース指定(-8〜8)
-    forcev  縦方向フォース指定(-8〜8)
-    boundRangeH 横方向バウンドレンジ 0〜16
-    boundRangeV 縦方向バウンドレンジ 0〜16
-    scalingCoeff    スケーリング係数 0〜0.01
-    numOfBlurForCoolMap ブラー適用回数 0〜
-    textureFilterType テクスチャフィルタ　0:ニアレスネイバー, 1:バイリニア
-    coolRange   強さの振れ幅を設定 0〜256
-    coolStrength    強さ 0〜255
-    coolParticleDensityDenominator  冷却粒子濃度分母 0>
-    coolParticleDensityNumerator    冷却粒子濃度分子 0>
-    edgeSmoothing　炎の端を目立ちにくくするかどうか
-
-
-◆プロパティ
-
-    action 機能の制御対象として指定可能なパラメータです
-
-    tilex   タイルXオフセット
-    tiley   タイルYオフセット
-
-●イベントオブジェクトの機能
-
-レイヤの機能を引き継ぎます。
-
-・file 指定で、envinit.tjs 登録済みのイベント絵を参照可能です
-・[EV*] 形式のコマンドで直接画像ロード指定参照できます
-
-●BGM オブジェクトの機能
-
-◆KAGコマンド
-
-    play            BGM の再生。ファイルを指定する。
-        補助パラメータ
-        noxchg  前のBGMをすぐ終了する
-        loop    ループ指定。省略すると true
-        time    フェードイン時間
-        start   開始タグ指定
-        paused  停止した状態ではじまる。time を指定すると無効
-        intime  フェードイン時間。time 指定している場合は無効
-        outtime 前のBGMのフェードアウト時間。time 指定している場合は無効
-        overlap 前のBGMフェードアウトから新BGMのフェードインまでの待ち時間。
-            　　指定するとクロスフェードになる
-    stop            BGMの停止。数値指定した場合はフェードアウト
-    pause           BGMの一時停止。数値指定するとフェードアウト
-    resume          BGMの再開
-    fade            BGMの音量制御。指定した音量になる
-        補助パラメータ
-        time フェードにかかる時間
-
-●SEオブジェクトの機能
-
-◆KAGコマンド
-
-    play    SE の再生
-        補助パラメータ
-        buf     処理対象バッファ指定
-        loop    ループ指定。省略すると false
-        time    フェードイン時間
-    stop    SE の停止。数値指定した場合はフェードアウト
-        補助パラメータ
-        buf     処理対象バッファ指定
-    fade    SE の音量制御。指定した音量になる
-        補助パラメータ
-        buf     処理対象バッファ指定
-        time フェードにかかる時間
-
-処理対象バッファを省略した場合は、適宜「あいているSE」を使います。
-あいているSEが存在しない場合は一番古いものが参照されます。
-つまり、KAG で numSEBuffers が1より大きい場合は、
-
-[SE se0001][SE se0002] とすると、se0001 も se0002 も両方なることになります。
-
-●ボイス関連の特殊な処理
-
-以下のゲーム変数を参照して特殊な処理が実行可能です
-
-f.voiceBase
-f.name
-f.family
-
-●アクションについて
-
-レイヤの座標や、拡大率などを、指定した時間で変動させることができます。
-この機能を「アクション」と呼びます。
-
-◇自動アクション
-
-zoom, rotate などのパラメータと同時に time 指定を行うと、自動的に
-それらのパラメータがアクション処理されます。指定された時間をかけて、
-現在の値から指定された値になめらかな変化が実行されます。
-ただし trans 指定がある場合はトランジション処理が優先されます。
-
-例: ２倍サイズまで1秒かけて拡大
-[layer zoom=200 time=1000]
-
-なお、パラメータ指定時に、初期化指定 ( パラメータ=指定値:初期値 ) を
-使うと、まずその初期値にリセットされてから指定値になるまでアクションが
-実行されます。
-
-accel パラメータでアクションの加減速が指定可能です。
-
-◇アクションコマンド
-
-アクション定義を行うことで、高度なアクションを適用できます。
-こちらの定義では複数のパラメータに対する操作を記述できます。
-
-1. envinit.tjs の actions に名前とパラメータを定義する、または
-　 action_名称.tjs の形で定義ファイルを作成する。
-
-2. action パラメータで指定
-
-※既定のパラメータは他のパラメータ指定で上書きできます
-
-◇アクションの同期ルール
-
-原則1:アクション指定は非同期に実行されます。
-
-アクションしている最中にもスクリプトは進行します。
-アクションが完了するまで処理を待つ場合は sync パラメータを指定します。
-
-sync 指定で同期動作しているアクションは、クリック操作によってキャンセルされます。
-キャンセルされたアクションは指定されたアクションが完了した状態になります。
-
-原則2: 動作中のアクションは改ページ処理でキャンセルされます
-
-改ページキャンセルを無視して、複数のテキストにわたって
-アクションを継続したい場合は、nowait パラメータを指定します。
-
-なお、stopaction を使うと、nowait 指定のアクションも強制的に停止となります。
-
-●トランジションについて
-
-レイヤの表示内容を切り換える処理を「トランジション」と言います。
-
-トランジション処理は以下の場合に実行されます
-・表示される場合
-・消去される場合
-・表示内容が変わる場合
-
-◇個別トランジションと全体トランジション
-
-ワールド拡張では、原則、個別のオブジェクトの表示に対して
-トランジションを指定できます。ただし、以下の場合は
-自動的に全体トランジションとして扱われます
-
-・オブジェクトの表示レベルが変わる場合
-
-・他のオブジェクトにも影響が及ぶ命令を使った場合
-
-  - 背景効果がある背景を変更(効果レイヤが変更される)
-　- 背景の時間を変更(キャラクタが同時変更)
-  - イベント絵がある状態で背景変更(イベント絵が消去)
-  - エフェクト操作の環境命令を実行(全画像に効果が及ぶ)
-
-・trans.transall パラメータが指定されたトランジションを使う場合
-
-全体トランジションは、画面全体を一度にトランジションする処理です。
-前述の自動処理の他、begintrans/endtrans で明示的に実行できます。
-
-◇指定方法
-
-1. envinit.tjs の transitions に名前とパラメータを定義する、または
-　 trans_名称.tjs の形で定義ファイルを作成する。
-
-2. trans パラメータで指定
-
-※既定のパラメータは他のパラメータ指定で上書きできます
-
-◇トランジションの同期
-
-トランジションはデフォルトでは完了するまで処理を待ちます(sync状態)
-ただし、nosync 指定を行った場合は、非同期での実行になります。
-トランジションを実行中のレイヤにトランジションを実行すると、
-以前のものがキャンセルされてからの実行となります。
-
-この動作は、envinit.tjs で　"nosynctrans" を定義することで逆
-（デフォルトはアクション同様に非同期、sync で同期可能）にできます。
-また、waittrans パラメータが指定されたトランジションも同期されます。
-
-同期動作しているトランジションはアクション同様、クリック操作によって
-キャンセルされます。キャンセルされたトランジションは
-指定されたトランジションが完了した状態になります。
-
-動作中のトランジションはアクション同様、改ページ処理でキャンセルされます
-改ページキャンセルを無視して、複数のテキストにわたって
-トランジションを継続したい場合は、nowait パラメータを指定します。
-
-stoptrans を使うと、nowait 指定のアクションも強制的に停止となります。
-
-全体トランジションも個別トランジションと同様に nosync 指定で
-非同期実行可能ですが、全体トランジションは原理的に一度に１つしか
-実行できません。全体トランジション中に、他の全体トランジションや、
-個別オブジェクトの描画更新処理(トランジションやアクションもろもろ)を
-実行した場合は、不整合を防ぐために現在実行中の全体トランジションは
-動作キャンセルされます。
-
-※ログに警告メッセージが表示されます。
-　これが出た場合はタイミング指定に無理がある状態なので、
-　記述を見直すことをオススメします。
-
-●delayrun
-
-コマンドを遅延実行させることができます
-
-[コマンド delayrun=遅延指定]
-
-・lineModeによる改ページ処理前(クリック待ちの後)、
-  または [delaydone] コマンドで遅延はキャンセルされます
-・数値指定した場合は指定の時間(ms単位)遅延してから実行されます
-・文字列指定した場合は、次に再生されるボイス中のラベルのタイミングで実行されます
-・文字列指定で、ボイス再生が無かった場合は強制的に冒頭での実行になります。
+﻿Title: Kirikiri/KAGEX World Extension Functions
+
+Author: Wamsoft L.P. Tsuyoshi Watanabe
+
+
+
+● KAGEX World Extension Functions Overview
+
+
+
+By loading `world.ks` as a plugin into KAGEX, you can use the special "World Functions".
+
+
+
+In the World Extension, elements that make up the game are considered "Objects,"
+and the scripting style involves performing operations on these objects.
+
+
+
+Environment : Control of the entire system and camera.
+Stage       : A dedicated object for controlling the location and the "Background Image" associated with it.
+Event       : A dedicated object for controlling "Event Images" (CGs).
+Character   : An object for controlling "Character Images" (standing sprites), voices, etc.
+Layer       : An object for controlling "Layer Images" as screen effect materials.
+
+
+
+All objects share the following characteristics:
+
+
+
+(1) KAG "Attribute" names are considered commands.
+(2) KAG "Attribute Values" are considered parameters for those commands.
+
+
+
+● Regarding Major Specification Changes
+
+
+
+・`hide` type commands have been abolished. Please use `all` type commands + `hide` instead.
+・`clear` command has been abolished. Please use `all` type commands + `hide` instead.
+・`newchar`/`delchar`, `newlayer`/`dellayer` commands remain but are deprecated.
+  Please use `char` / `layer` for creation, and use the `delete` command of the respective object for deletion.
+
+
+
+● Installation Method
+
+
+
+It is installed automatically by default. If you do not use it,
+please set `global.worldEnabled` to `false` in `startup.tjs` or similar.
+
+
+
+● Extended Tags
+
+
+
+◇ Extension of Basic Processing
+
+
+
+KAGEX tag processing is extended as follows:
+
+
+
+・The `ENV` tag becomes a command for the "Environment".
+・The `STAGE` or `BG` tag becomes a command for the "Stage".
+・The `EVENT` or `EV` tag becomes a command for the "Event".
+・The `CHAR` tag, combined with the `name` option, becomes a command for a "Character".
+・The `LAYER` tag, combined with the `name` option, becomes a command for a "Layer".
+・If there is a location specification, time specification, or action specification command matching the tag name,
+　it becomes a command for the "Stage".
+・If a character matching the tag name exists, it becomes a command for that character.
+・If a layer matching the tag name exists, it becomes a command for that layer.
+・"Environment" commands matching the tag name function as is.
+・Name processing functions are processed in synchronization with character voices.
+
+
+
+・The `BGM` tag becomes a command for the "BGM Object".
+
+
+
+  ※ Specifications starting with "bgm" are treated as filenames,
+　   equivalent to `[BGM play=Name]`.
+
+
+
+・The `SE` tag becomes a command for the "SE Object Group".
+
+
+
+  ※ If you specify a name starting with "se", it is considered a specification
+　   for the SE currently playing with that name.
+　   If no SE is playing, it is treated as equivalent to `[SE play=Name]`.
+
+
+
+・Release conditions for delayed execution (`delayrun`) are added.
+
+
+
+　String specification also reacts to labels within voice files.
+　If voice playback does not occur, the string specification forces execution at the beginning.
+  Labels within voices function with their original names and also with aliases 
+　`vl1`, `vl2`, `vl3`... in order of appearance.
+  Additionally, the virtual label `vlstop` is processed when the voice ends.
+
+
+
+◇ Automatic Flag Processing
+
+
+
+・When an image starting with "EV" is drawn on the Event or Stage,
+　a value "cg_Name" is automatically registered in `sflags`.
+
+
+
+・When BGM is played using the `BGM` tag,
+　a value "bgm_Name" is automatically registered in `sflags`.
+
+
+
+・When a character voice is played, a flag "voice_VoiceDefinitionName"
+　is automatically registered in `sflags`.
+
+
+
+
+
+・When an image is drawn on a layer,
+　a value "cg_Name" is automatically registered in `sflags`.
+
+
+
+・When a tile image is drawn on a layer,
+　a value "tile_Name" is automatically registered in `sflags`.
+
+
+
+・When a GFX type effect is displayed on a layer,
+  a value "autoflagDefinitionName_Name" is automatically registered in `sflags`.
+
+
+
+◇ Command Extensions
+
+
+
+◆ begintrans / endtrans
+
+
+
+Executes a transition for the entire screen.
+
+
+
+・When `begintrans` is executed, the content of the front screen is copied to the back screen.
+・From this point until the `endtrans` command is executed, all drawing for environment-related objects
+　is performed on the back screen.
+・When `endtrans` is executed, a transition for the entire screen is executed with the specified parameters.
+
+
+
+Attributes of begintrans
+    trans   Transition name specification (*Details described later)
+    fade    Fade specification shortcut (*Details described later)
+	nosync	Executes the global transition asynchronously
+
+
+
+ ※ `ltbegin`/`ltend` are adjusted to function similarly.
+
+
+
+◆ msgoff
+
+
+
+Erases the message window.
+
+
+
+Attributes
+    trans   Transition name specification
+    fade    Fade specification
+    nofade  Suppress automatic fade
+
+
+
+If neither `trans` nor `fade` is specified,
+standard fade processing using opacity is performed instead of back/front screen transition.
+※ The fade time in this case can be specified with `kag.messageeFadeTime`.
+
+
+
+◆ msgon
+
+
+
+Displays the message window.
+
+
+
+Attributes
+    trans   Transition name specification
+    fade    Fade specification
+
+
+
+Like `msgoff`, if neither `trans` nor `fade` is specified, standard fade processing is used.
+
+
+
+◆ layer
+
+
+
+Functions as a command for layer objects.
+Can be used when you want to specify a layer name as a parameter in a macro, etc.
+If a non-existent layer is specified, it is automatically created.
+
+
+
+Attributes
+    name    The identifier name of the layer.
+
+
+
+◆ char
+
+
+
+Functions as a command for environment character objects.
+Can be used when you want to specify a character name as a parameter in a macro, etc.
+If a non-existent name is specified, it is automatically created.
+
+
+
+Attributes
+    name        Specifies the character name.
+    initname    Initialization name.
+
+
+
+◆ allse
+
+
+
+Executes the same command for all SEs.
+
+
+
+◆ showvoiceinfo
+
+
+
+◆ twait or *
+
+
+
+Waits for a time from the start of the message display or for a label within a voice.
+Basically used in combination with `delayrun` specification.
+
+
+
+Attributes
+	name	Voice label specification
+	time	Wait time specification
+
+
+
+If attributes are unspecified, it waits for automatic label specifications `vl1`, `vl2`, `vl3`, etc.,
+in the order they appear in the text.
+
+
+
+Example: Just insert `[*]` at the timing where the label appears in the text.
+
+
+
+[Akari Surprise]
+[Akari Startled delayrun=vl1]
+[Akari Cry delayrun=vl2]
+【Akari】Eh, [*] wha, [*] no way~
+
+
+
+◆ showtwait
+
+◆ laytrans
+
+◆ ltbegin/end extension
+
+
+
+◇ All-type Commands
+
+
+
+When you want to process image-type objects in a batch, you can use descriptions starting with `all~`.
+These commands basically mean the same as listing the same command one by one for objects
+displayed at that time.
+In other words, if transitions or similar are synchronized, they are executed one by one in order.
+If you want to make them all operate simultaneously:
+
+
+
+a. Add `nosync` specification to make them all operate asynchronously.
+b. Add `all` specification to perform a global transition.
+
+
+
+Please do one of the above.
+
+
+
+※ Default values when these are unspecified can be defined in `envinit.tjs`.
+allnosync : Default is considered `nosync` specification.
+allall    : Default is considered `all` specification.
+
+
+
+Common Attributes
+	poscond Limit the display position if the target is a character (specify the same as pos specification).
+	vcond	Limit the display state of the target.
+			true: Those currently displayed (Default)
+			false: Those hidden
+			all: All
+	all		Executes while enclosing the whole operation in `begintrans`/`endtrans`.
+
+
+
+※ Example
+　Discard all hidden layers
+  [alllayer delete vcond=false]
+
+
+
+◆ allchar	Executes the same command for all displayed characters.
+◆ alllayer	Executes the same command for all displayed layers.
+◆ allfore	Executes the same command for all displayed characters/layers.
+◆ allbase	Executes the same command for the event image/stage.
+◆ allimage	Executes the same command for all displayed image objects.
+
+
+
+● Omission of Description in World Extension
+
+
+
+Various shorthand notations are valid in World Extension.
+
+
+
+◇ Omission of Environment Attribute Specification
+
+
+
+-------------------------
+[stage stage=School]
+-------------------------
+
+
+
+This is the notation to set the stage to "School".
+If the registered name does not conflict with other specifications, it can be omitted as follows:
+
+
+
+-------------------------
+[stage School]
+-------------------------
+
+
+
+◇ Omission of Environment Name
+
+
+
+If the attribute value does not conflict with other tags, it can be further omitted as follows:
+
+
+
+-------------------------
+[School]
+-------------------------
+
+
+
+Since the tag "School" does not exist, it is replaced with a command for the stage
+and executed, becoming equivalent to `[stage School]`.
+
+
+
+◇ Character Specification
+
+
+
+-------------------------
+[Minase dress=Uniform pos=Middle]
+-------------------------
+
+
+
+Since neither the tag "Minase" nor a command for the environment exists,
+it is processed as a command for the character "Minase".
+※ The character must be registered in `envinit.tjs` in advance.
+
+
+
+Layers created with `newlay` behave similarly.
+
+
+
+◇ Omission of Character Attributes
+
+
+
+-------------------------
+[Minase Uniform Middle]
+-------------------------
+
+
+
+Like the environment, if the name does not overlap with others,
+the parameter name specification can be omitted. The same applies to layers.
+
+
+
+◇ Character Voice Playback
+
+
+
+---------------------------------------------
+【Tae/Voice】「Wake up... hey, wake up I said...」
+---------------------------------------------
+
+
+
+・Plays the default voice for character "Tae" at that point.
+・Displays the name as "Voice" in the message window.
+・Automatically displays the face column of the message window with "Tae's" current expression + pose.
+
+
+
+
+
+
+
+    voice       Specifies the voice to play next.
+　　　           Number:   Specifies the playback numeric counter.
+        　　　   String:   Interrupts with a one-time playback.
+            　　 ignore:   Ignores playback only once (treated as a string).
+
+
+
+　  once        Interrupts for one-time playback using a number specification (treated as a string).
+　  incvoice    Increments the numeric counter even when a string is specified.
+    noincvoice  Does not increment the numeric counter (stronger specification than incvoice).
+
+
+
+    clearvoice  Stops voice playback from the next time (returns to initial state).
+    nextvoice   If specified, plays voice simultaneously with the next voice playback of another character.
+
+
+
+
+
+
+
+
+
+
+
+● Environment Object Functions
+
+
+
+◆ KAG Commands
+
+
+
+    init        Initializes the state.
+                All characters and layers are erased,
+                and the stage and events are set to a non-displayed state.
+    nostopbgm   Continues BGM during init.
+
+
+
+	-- Global Correction --
+
+
+
+	The same correction commands as individual objects can be specified.
+　　Corrections specified here are reflected in all objects.
+	Cancelled by specifying an empty string or `resetcolor`.
+
+
+
+    script      Specifies an image processing function.
+    noise       Applies noise processing to the image 0~255.
+    contrast    Corrects image contrast -100~100.
+    brightness  Corrects image brightness -255~255.
+    hue         Corrects image hue -180~180 (degrees).
+    saturation  Corrects image saturation -100~100 (%).
+    luminance   Corrects image luminance -100~100 (%).
+    filter      Applies a color mask filter to the image.
+    blurx       Box blur X amount.
+    blury       Box blur Y amount.
+    blur        Box blur XY simultaneous specification.
+    grayscale   Display of the image becomes grayscale.
+    rgamma      Performs R gamma correction on the image.
+    ggamma      Performs G gamma correction on the image.
+    bgamma      Performs B gamma correction on the image.
+
+
+
+    resetcolor  Initializes correction specifications.
+
+
+
+	-- Camera Control --
+
+
+
+    shiftx      Global screen shift amount X. time, accel, nowait valid.
+    shifty      Global screen shift amount Y. time, accel, nowait valid.
+    camerax     Camera position specification X. time, accel, nowait valid.
+    cameray     Camera position specification Y. time, accel, nowait valid.
+    camerazoom  Camera zoom specification. time, accel, nowait valid.
+	camerarotate Camera rotation specification. time, accel, nowait valid.
+    resetcamera Initialization of camera position. time, accel, nowait valid.
+
+
+
+	cameraox	Specifies the vanishing point of the camera.
+	cameraoy	Specifies the vanishing point of the camera.
+	resetcameraorigin
+				Returns the vanishing point to the initial state (as specified by the background).
+
+
+
+    actioncamera Specification of camera action (Equivalent to `action` command).
+    stopcamera  Stops camera action (Equivalent to `stopaction`).
+    camerach	Sets the face position of the specified character as the origin of camera movement.
+				※ If undefined for the standing sprite, the emotion origin is referenced.
+
+
+
+    reset       Executes `resetcolor` and `resetcamera`.
+
+
+
+◆ Properties
+
+
+
+    The following properties can be specified as actions with the `actioncamera` command:
+
+
+
+    shiftx      	Global screen shift amount X
+    shifty      	Global screen shift amount Y
+    camerax     	Camera position specification X
+    cameray     	Camera position specification Y
+    camerazoom  	Camera zoom specification
+	camerarotate	Camera rotation specification
+
+
+
+● Layer-type Object Functions
+
+
+
+◇ Common Functions
+
+
+
+A group of commands that can be used commonly for Stage, Event, Character, and Layer.
+
+
+
+◆ KAG Commands
+
+
+
+    orx         Display origin specification X coordinate. center/left/right/number.
+    ory         Display origin specification Y coordinate. center/top/bottom/number.
+    vorigin     Display origin specification (equivalent to orx, ory).
+                123456789 clockwise from top left (9 is center).
+                Default is screen center.
+
+
+
+    xpos        X position specification. Initialization/Relative specification valid. ※ Action parameter name is `left`.
+    ypos        Y position specification. Initialization/Relative specification valid. ※ Action parameter name is `top`.
+
+
+
+    opacity     Opacity (0-255). Initialization/Relative specification valid.
+
+
+
+	flipx		Horizontal flip true/false.
+	flipy		Vertical flip true/false.
+	slantx		Horizontal slant rate (%). Initialization/Relative specification valid.
+	slanty		Vertical slant rate (%). Initialization/Relative specification valid.
+    zoomx       Horizontal magnification (%). Initialization/Relative specification valid.
+    zoomy       Vertical magnification (%). Initialization/Relative specification valid.
+    zoom        Magnification (%). Initialization/Relative specification valid. ※ XY simultaneous specification.
+    rotate      Rotation angle (degrees). Initialization/Relative specification valid.
+
+
+
+    afx         Rotation origin specification X coordinate. center/left/right/number.
+    afy         Rotation origin specification Y coordinate. center/top/bottom/number.
+    origin      Rotation origin specification (equivalent to afx, afy).
+                123456789 clockwise from top left (9 is center).
+
+
+
+    time        Action operation time specification (ms). 
+    accel       Additional parameter for action specification.
+		Negative number: Deceleration
+		0: Linear
+		Positive number: Acceleration
+		"acdec": Acceleration/Deceleration movement (Cubic curve)
+		"accos": Acceleration/Deceleration movement (Cosine movement)
+
+
+
+    action      Action name specification (*Details described later).
+    stopaction  Forced stop of action.
+	path		Executes `move` compatible movement as an action.
+    spline		Spline interpolation for path movement specification of action.
+
+
+
+    trans       Transition name specification (*Details described later).
+    notrans     Transition invalidation specification.
+    stoptrans   Forced stop of transition.
+
+
+
+    fade        Special transition specification.
+                 When displayed: Equivalent to [Target opacity=255:0 time=Time].
+                 When erased: Equivalent to [Target opacity=0 time=Time].
+                 When updating: Equivalent to [Target trans=crossfade time=Time].
+                 ※ If time is omitted, the time defined in envinit.tjs is used.
+
+
+
+    sync        Synchronization specification for Action/Transition.
+    nosync      Asynchronous specification for Action/Transition.
+    nowait      Avoidance of forced synchronization for Action/Transition.
+	wait		Adds wait specification after synchronization. Equivalent to `sync` without parameters.
+				Adds additional wait time with `wait=Number`.
+    waitmovie   Waits for layer movie playback.
+    waitanim    Waits for layer animation playback.
+
+
+
+    show        Shows the layer.
+    hide        Erases the layer.
+
+
+
+    type        Layer composition mode.
+
+
+
+    --  Special Image Correction Processing -------------------------------------
+
+
+
+    These processes dynamically process the image.
+    They take some time to process.
+
+
+
+    script      Calls an image processing function to
+                process the image. Comma-separated; the first parameter is the function name,
+                the rest are arguments.
+
+
+
+	　　　　　　Function definitions are written as a dictionary corresponding to names in `envscript.tjs`,
+                or individual function definition files are created in the form `script_Name.tjs`.
+    
+    noise       Applies noise processing to the image 0~255.
+
+
+
+    contrast    Corrects image contrast -100~100.
+    brightness  Corrects image brightness -255~255.
+
+
+
+    hue         Corrects image hue -180~180 (degrees).
+    saturation  Corrects image saturation -100~100 (%).
+    luminance   Corrects image luminance -100~100 (%).
+
+
+
+    filter      Applies a color mask filter to the image.
+        　　    Format: 0xAARRGGBB:CompositionMode
+
+
+
+    blurx       Box blur X amount.
+    blury       Box blur Y amount.
+    blur        Box blur XY simultaneous specification.
+
+
+
+    grayscale   Display of the image becomes grayscale.
+    rgamma      Performs R gamma correction on the image.
+    ggamma      Performs G gamma correction on the image.
+    bgamma      Performs B gamma correction on the image.
+
+
+
+    ----------------------------------------------------------
+
+
+
+    raster      Specifies the amplitude of the raster scroll effect.
+    rasterlines Specifies the range of the number of top and bottom lines for the raster scroll effect.
+    rastercycle Specifies the display cycle of the wave for the raster scroll effect.
+    
+    resetpos    Initialization of xpos, ypos, rotate, zoom, afx, afy, raster.
+    resetcolor  Initialization of type, noise, grayscale, rgamma, ggamma, bgamma,
+                contrast, brightness, hue, saturation, luminance, 
+                blurx, blury, filter.
+    reset       Executes `resetpos` and `resetcolor` at once.
+
+
+
+    noshift     Excludes from target of camera shift processing (Specified at creation).
+    nocamera    Excludes from target of camera processing (Specified at creation).
+
+
+
+    ※ Initialization Specification
+        Normal notation:  data = to
+        Initialization notation:  data = to:from
+        By separating with a colon and doubling parameters:
+        (1) Initialize immediately with `from` value.
+        (2) Change towards `to` value.
+        This movement occurs. Meaningful only when `time` is specified.
+
+
+
+    ※ Relative Specification
+
+
+
+     Prefixing with @ like `@100`, `@-100` makes it a
+     relative specification from the current value.
+
+
+
+     Suffixing with % like `100%`, `@100%` makes it a % specification relative to the maximum value.
+　　　・For coordinates, it's the edge of the screen.
+　　　・If originally a % specification, it remains so.
+　　　・For rotation, it's 360 degrees.
+
+
+
+◆ Properties
+
+
+
+    Parameters that can be specified as control targets for the `action` function.
+
+
+
+    left        Display position of layer image.
+    top         Display position of layer image.
+    opacity     Opacity of layer image (0~255).
+    rotate      Rotation amount of layer image (degrees).
+    zoom        Magnification of layer image (%).
+    raster      Raster amplitude amount.
+
+
+
+
+
+● Stage Object Functions
+
+
+
+◆ KAG Commands
+
+
+
+    stage       Specifies stage name. Omission notation possible.
+                Stages are registered in `envinit.tjs` in advance.
+
+
+
+    stime       Specifies stage time name. Omission notation possible.
+                Times are registered in `envinit.tjs` in advance.
+                ※ Color correction parameters can be specified per time.
+
+
+
+	nolayer		Do not display stage effect layers.
+
+
+
+
+
+● Character/Layer Common Functions
+
+
+
+◇ Deletion Specification
+
+
+
+◆ KAG Commands
+
+	delete	Discards the character or layer object.
+			Processing equivalent to `dellay`, `delchar`.
+
+
+
+◇ Display Level Specification
+
+
+
+◆ KAG Commands
+
+
+
+    front   Sets the stacking order of the character standing sprite to the top within the same level.
+    back    Sets the stacking order of the character standing sprite to the bottom within the same level.
+    level   Specifies the display level.
+
+
+
+
+
+● Character Object Functions
+
+
+
+◇ Standing Sprite Specification
+
+
+
+◆ KAG Commands
+
+
+
+    dress       Specifies the variation of dress (clothing) for the pose.
+                Example: Uniform / Casual / Pajamas, etc.
+
+
+
+    pose        Specifies the character's pose.
+                ※ Those where "Face" (Expression) can be reused are treated as the same pose.
+
+
+
+    face        Specifies the variation of expression for the pose.
+                Example: Laugh / Cry / Anger.
+
+
+
+    image       Directly specifies the character's standing sprite image.
+                If `image` is valid, `pose`-related specifications are ignored.
+                This can be cancelled by specifying `pose`-related commands again.
+
+
+
+    pos         Specifies the position to display the standing sprite. Initialization specification valid.
+                Depth specification (Level specification) and Left/Right specification can be specified independently.
+
+
+
+    ※ For all of these, the parameter names (strings) to be specified are registered in `envinit.tjs`.
+
+
+
+    facewin
+    faceon
+    faceoff
+	
+	facepose	Specifies when specifying the pose for the expression separately. Cancelled with an empty string.
+
+
+
+◇ Voice Specification
+
+
+
+If there is a description of 【Name】 at the beginning of the line, the voice is automatically played.
+
+
+
+Basic Operation
+　・If a number is specified, the voice follows the format and plays,
+　　and the numeric counter is incremented.
+　・If a string is specified, it plays taking priority over the numeric specification,
+　　and the numeric counter is not changed.
+　・String specification is valid only once.
+
+
+
+◆ KAG Commands
+
+
+
+    playvoice   Directly plays the specified voice.
+                When specifying a voice name, it does not affect the voice count.
+                When unspecified, it operates by referring to the internal count,
+                and the count is incremented.
+    
+    waitvoice   Waits for the currently playing voice to finish.
+                If set to `true` (default), cancellation by click is valid.
+                If set to `false`, clicks are suppressed.
+
+
+
+    stopvoice   Forcibly stops voice playback.
+
+
+
+    bvoice      Specifies a voice to be loop-played in the background.
+                Stops while other voices of the corresponding character are playing. When that voice stops,
+                it resumes and loop plays. Stops if an empty string is specified.
+	Auxiliary Parameter
+	loop	Specifies looping.
+
+
+
+Example: Play by specifying voice number
+------------------------------------
+[Tae voice=1000]
+【Tae】Good morning
+------------------------------------
+
+
+
+Example: Play by specifying voice file
+------------------------------------
+[Tae voice="tae1000"]
+【Tae】Good morning
+------------------------------------
+
+
+
+Example: Remove voice playback from next time
+------------------------------------
+[Tae clearvoice]
+------------------------------------
+
+
+
+Example: Handling a case where one voice is missing
+------------------------------------
+[Tae voice=1000 once]
+【Tae】Good morning
+------------------------------------
+
+
+
+Example: Handling a case where one voice is replaced
+------------------------------------
+[Tae voice=1000 once incvoice]
+【Tae】Good morning
+------------------------------------
+
+
+
+Example: Handling a case where silence is inserted (count continues)
+------------------------------------
+[Tae voice=ignore]
+【Tae】......
+------------------------------------
+
+
+
+Example: Handling a case where voice is removed for one line (discard corresponding count)
+------------------------------------
+[Tae voice=ignore incvoice]
+【Tae】......
+------------------------------------
+
+
+
+・In the environment initialization process, voices for all characters are initialized to "None".
+・The actual file name format for number specification is defined in `envinit.tjs`.
+
+
+
+※ About Wait Time during Voice Specification
+
+
+
+When voice playback occurs,
+the wait time at page wait during auto-play changes as follows:
+
+
+
+Normal
+　Waits for the specified time.
+During Voice Playback
+　Remaining voice time at the moment the wait started (calculated from voice length) + specified time wait.
+
+Clicking cancels the wait and proceeds to the next conversation.
+
+
+
+◇ Emotion Function
+
+
+
+
+
+● Layer Functions
+
+
+
+◆ KAG Commands
+
+
+
+    width   Image size specification.
+    height  Image size specification.
+
+
+
+    file    Image loading specification.
+    noflag  Do not set read flag when loading.
+
+
+
+    color   Color specification. Specified by 0xAARRGGBB.
+
+
+
+	mask	Cuts out the image using the alpha of the specified image.
+	maskleft Mask position adjustment.
+	masktop  Mask position adjustment.
+
+
+
+ 	clip    Clips the display with the image.
+	xclip   X position of the display clipping image. ※ Action parameter name is `clipImageLeft`.
+	yclip   Y position of the display clipping image. ※ Action parameter name is `clipImageTop`.
+
+
+
+	※ `mask` processes the image itself.
+　　　`clip` clips the display area of the corresponding object in real-time.
+
+
+
+    movie   Movie specification.
+    loop    Movie loop specification.
+    alpha   Movie alpha specification. 0: No alpha, 1: Alpha image (Vertical layout), 2: Alpha image (Horizontal layout).
+
+
+
+    tile    Tile image specification. The screen is paved with the specified size.
+    tilex   Tile X offset.
+    tiley   Tile Y offset.
+
+
+
+    copy    Duplicates attributes of another layer.
+
+
+
+    fire        Fire effect seed image specification.
+    firecolor   Fire effect color specification. red, blue, white, or
+            specify color with 0xRRGGBB. If color specifications are connected with ":" like 0xRRGGBB:0xRRGGBB,
+            it becomes a gradation.
+            The one described earlier is the color of the higher temperature part.
+            Colors are placed on average, but if multiple ":" are described,
+            that area becomes longer. The alpha value becomes linear.
+    firegamma   Specified when making the fluctuation of the alpha value non-linear
+            when specifying color directly with `firecolor`.
+    firelayer   Directly specifies the fire color map image with a 256x1 size layer.
+    firewidth   Fire effect area size specification. Original file size if omitted.
+    fireheight  Fire effect area size specification. Original file size if omitted.
+    fireleft    Fire effect seed image placement position.
+    firetop     Fire effect seed image placement position.
+    firemargin  Extends the fire effect image area by this amount to front, back, left, and right.
+    forceh      Horizontal force specification (-8~8).
+    forcev      Vertical force specification (-8~8).
+    boundRangeH Horizontal bound range 0~16.
+    boundRangeV Vertical bound range 0~16.
+    scalingCoeff    Scaling coefficient 0~0.01.
+    numOfBlurForCoolMap Blur application count 0~.
+    textureFilterType Texture filter. 0: Nearest Neighbor, 1: Bilinear.
+    coolRange   Set the amplitude of strength 0~256.
+    coolStrength    Strength 0~255.
+    coolParticleDensityDenominator  Cooling particle density denominator 0>.
+    coolParticleDensityNumerator    Cooling particle density numerator 0>.
+    edgeSmoothing　Whether to make the edges of the fire less conspicuous.
+
+
+
+
+
+◆ Properties
+
+
+
+    Parameters that can be specified as control targets for the `action` function.
+
+
+
+    tilex   Tile X offset.
+    tiley   Tile Y offset.
+
+
+
+● Event Object Functions
+
+
+
+Inherits functions of layers.
+
+
+
+・With `file` specification, can reference event images registered in `envinit.tjs`.
+・Can directly refer to image load specification with commands in `[EV*]` format.
+
+
+
+● BGM Object Functions
+
+
+
+◆ KAG Commands
+
+
+
+    play            BGM playback. Specify the file.
+        Auxiliary Parameters
+        noxchg  Ends the previous BGM immediately.
+        loop    Loop specification. True if omitted.
+        time    Fade-in time.
+        start   Start tag specification.
+        paused  Starts in a paused state. Invalid if `time` is specified.
+        intime  Fade-in time. Invalid if `time` is specified.
+        outtime Fade-out time of previous BGM. Invalid if `time` is specified.
+        overlap Wait time from previous BGM fade-out to new BGM fade-in.
+            　　Becomes crossfade if specified.
+    stop            Stop BGM. Fade-out if number is specified.
+    pause           Pause BGM. Fade-out if number is specified.
+    resume          Resume BGM.
+    fade            BGM volume control. Becomes the specified volume.
+        Auxiliary Parameter
+        time Time taken for fade.
+
+
+
+● SE Object Functions
+
+
+
+◆ KAG Commands
+
+
+
+    play    SE playback.
+        Auxiliary Parameters
+        buf     Processing target buffer specification.
+        loop    Loop specification. False if omitted.
+        time    Fade-in time.
+    stop    Stop SE. Fade-out if number is specified.
+        Auxiliary Parameter
+        buf     Processing target buffer specification.
+    fade    SE volume control. Becomes the specified volume.
+        Auxiliary Parameter
+        buf     Processing target buffer specification.
+        time Time taken for fade.
+
+
+
+If the processing target buffer is omitted, it uses an "empty SE" appropriately.
+If no empty SE exists, the oldest one is referenced.
+In other words, if `numSEBuffers` in KAG is greater than 1:
+
+
+
+If `[SE se0001][SE se0002]` is done, both se0001 and se0002 will ring.
+
+
+
+● Voice Related Special Processing
+
+
+
+Special processing can be executed by referencing the following game variables.
+
+
+
+f.voiceBase
+f.name
+f.family
+
+
+
+● About Actions
+
+
+
+Coordinates, magnification, etc. of a layer can be changed over a specified time.
+This function is called an "Action".
+
+
+
+◇ Automatic Action
+
+
+
+If `time` is specified simultaneously with parameters like `zoom`, `rotate`,
+those parameters are automatically action-processed.
+A smooth change from the current value to the specified value is executed over the specified time.
+However, if `trans` is specified, transition processing takes priority.
+
+
+
+Example: Magnify to 2x size over 1 second.
+[layer zoom=200 time=1000]
+
+
+
+Note that when specifying parameters, if you use initialization specification (Parameter=SpecifiedValue:InitialValue),
+it first resets to the initial value and then executes the action until it reaches the specified value.
+
+
+
+Acceleration/Deceleration of the action can be specified with the `accel` parameter.
+
+
+
+◇ Action Command
+
+
+
+Advanced actions can be applied by defining actions.
+Operations on multiple parameters can be described in these definitions.
+
+
+
+1. Define name and parameters in `actions` of `envinit.tjs`, or
+　 create a definition file in the form `action_Name.tjs`.
+
+
+
+2. Specify with `action` parameter.
+
+
+
+※ Default parameters can be overwritten by other parameter specifications.
+
+
+
+◇ Action Synchronization Rules
+
+
+
+Principle 1: Action specifications are executed asynchronously.
+
+
+
+Scripts proceed even while an action is in progress.
+If waiting for processing until the action completes, specify the `sync` parameter.
+
+
+
+Actions operating synchronously with `sync` specification are canceled by click operations.
+Cancelled actions enter the state where the specified action is completed.
+
+
+
+Principle 2: Actions in operation are canceled by page break processing.
+
+
+
+If you want to ignore page break cancellation and continue the action
+across multiple texts, specify the `nowait` parameter.
+
+
+
+Note that using `stopaction` forces actions specified with `nowait` to stop as well.
+
+
+
+● About Transitions
+
+
+
+The process of switching the display content of a layer is called a "Transition".
+
+
+
+Transition processing is executed in the following cases:
+・When displayed
+・When erased
+・When display content changes
+
+
+
+◇ Individual Transition and Global Transition
+
+
+
+In World Extension, in principle, transitions can be specified for the display of individual objects.
+However, in the following cases, it is automatically treated as a Global Transition:
+
+
+
+・When the display level of an object changes.
+
+
+
+・When commands affecting other objects are used.
+
+
+
+  - Changing background with background effects (Effect layer changes).
+　- Changing background time (Character changes simultaneously).
+  - Changing background while Event CG exists (Event CG is erased).
+  - Executing environment commands for effect manipulation (Effect reaches all images).
+
+
+
+・When a transition specified with the `trans.transall` parameter is used.
+
+
+
+A Global Transition is a process that transitions the entire screen at once.
+Besides the aforementioned automatic processing, it can be explicitly executed with `begintrans`/`endtrans`.
+
+
+
+◇ Specification Method
+
+
+
+1. Define name and parameters in `transitions` of `envinit.tjs`, or
+　 create a definition file in the form `trans_Name.tjs`.
+
+
+
+2. Specify with `trans` parameter.
+
+
+
+※ Default parameters can be overwritten by other parameter specifications.
+
+
+
+◇ Transition Synchronization
+
+
+
+Transitions wait for processing to complete by default (sync state).
+However, if `nosync` is specified, it executes asynchronously.
+If a transition is executed on a layer currently executing a transition,
+it executes after the previous one is cancelled.
+
+
+
+This behavior can be reversed by defining "nosynctrans" in `envinit.tjs`
+(Default becomes asynchronous like action, sync can be done with `sync`).
+Also, transitions specified with the `waittrans` parameter are synchronized.
+
+
+
+Transitions operating synchronously are canceled by click operations, just like actions.
+Cancelled transitions enter the state where the specified transition is completed.
+
+
+
+Transitions in operation are canceled by page break processing, just like actions.
+If you want to ignore page break cancellation and continue the transition
+across multiple texts, specify the `nowait` parameter.
+
+
+
+Using `stoptrans` forces actions specified with `nowait` to stop as well.
+
+
+
+Global Transitions can also be executed asynchronously with `nosync` specification like individual transitions,
+but in principle, only one Global Transition can be executed at a time.
+During a Global Transition, if another Global Transition or drawing update processing (various transitions and actions)
+of individual objects is executed, the currently running Global Transition is cancelled
+to prevent inconsistencies.
+
+
+
+※ A warning message will be displayed in the log.
+　If this appears, the timing specification is unreasonable, so
+　it is recommended to review the description.
+
+
+
+● delayrun
+
+
+
+Commands can be executed with delay.
+
+
+
+[Command delayrun=DelaySpecification]
+
+
+
+・Delay is canceled before page break processing by lineMode (after click wait),
+  or by the `[delaydone]` command.
+・If a number is specified, it executes after delaying for the specified time (in ms).
+・If a string is specified, it executes at the timing of the label in the voice played next.
+・With string specification, if there is no voice playback, execution is forced at the beginning.

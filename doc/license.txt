@@ -1,5 +1,5 @@
-﻿Title: KAGEX のライセンスについて
-Author: 渡邊剛
-Date: 2006/6/2
-
-KAGEX のライセンスは 吉里吉里２および KAG3 とまったく同じライセンスになります。
+﻿Title: About the KAGEX License
+Author: Tsuyoshi Watanabe
+Date: 2006/6/2
+
+The license for KAGEX is exactly the same as that of Kirikiri 2 and KAG3.
