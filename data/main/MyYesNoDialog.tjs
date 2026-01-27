@@ -494,9 +494,9 @@ var origAskYesNo = askYesNo;
 
 var yesnoMap = %[
 
-    "Return to the beginning. Are you sure?" => "dialog_title_base",
+    "Returning to title. Are you sure?" => "dialog_title_base",
 
-    "Exit?" => "dialog_exit_base",
+    "Do you want to exit?" => "dialog_exit_base",
 
     "Overwrite?" => "dialog_overwrite_base",
 

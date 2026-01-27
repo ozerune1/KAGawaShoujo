@@ -8192,7 +8192,7 @@ class KAGWindow extends Window
 
 		// Return to Start (with confirmation)
 
-        askYesNo("Returning to the start. Is this okay?", "Confirm", goToStart);
+        askYesNo("Returning to title. Are you sure?", "Confirm", goToStart);
 
 	}
 
