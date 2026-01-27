@@ -1,6 +1,6 @@
-﻿// BGM.tjs - BGM管理
+// BGM.tjs - BGM Management
 
-// Copyright (C)2001-2008, W.Dee and contributors  改変・配布は自由です
+// Copyright (C)2001-2008, W.Dee and contributors  Modification and distribution are free.
 
 
 
@@ -8,25 +8,23 @@ class KAGSoundBuffer
 
 {
 
-	// 各 KAG 用サウンドバッファクラスに、この KAGSoundBuffer
-
-	// クラスを継承させる
+	// Inherit this KAGSoundBuffer class into each sound buffer class for KAG
 
 
 
-	var sbclass; // サウンドバッファのクラス
+	var sbclass; // Sound buffer class
 
-	var owner; // オーナー
+	var owner; // Owner
 
 
 
-	var inFadeAndStop = false; // フェード終了時に演奏を停止するか
+	var inFadeAndStop = false; // Whether to stop playback when fading ends
 
-    var inFadeAndPause = false; // フェード終了時に演奏を一時停止するか
+    var inFadeAndPause = false; // Whether to pause playback when fading ends
 
-    var inFading = false; // フェード中か
+    var inFading = false; // Is fading in progress?
 
-	var prevstatus = "unload"; // 直前のステータス
+	var prevstatus = "unload"; // Previous status
 
 
 
@@ -54,7 +52,7 @@ class KAGSoundBuffer
 
 	{
 
-		// fade オーバーライド
+		// fade override
 
 		inFading = true;
 
@@ -72,7 +70,7 @@ class KAGSoundBuffer
 
 	{
 
-		// stopFade オーバーライド
+		// stopFade override
 
 		sbclass.stopFade(...);
 
@@ -88,7 +86,7 @@ class KAGSoundBuffer
 
 	{
 
-		// stop オーバーライド
+		// stop override
 
 		sbclass.stop(...);
 
@@ -104,7 +102,7 @@ class KAGSoundBuffer
 
 	{
 
-		// 時間 time, delay でフェードアウト後、演奏を停止する
+		// Stops playback after fading out with time and delay
 
 		inFading = true;
 
@@ -120,7 +118,7 @@ class KAGSoundBuffer
 
 	{
 
-		// 時間 time, delay でフェードアウト後、演奏を停止する
+		// Stops playback after fading out with time and delay
 
 		inFading = true;
 
@@ -136,7 +134,7 @@ class KAGSoundBuffer
 
 	{
 
-        // フェードが終了した
+        // Fading completed
 
 		inFading = false;
 
@@ -144,13 +142,13 @@ class KAGSoundBuffer
 
 		{
 
-			sbclass.stop(); // inFadeAndStop ならば停止
+			sbclass.stop(); // Stop if inFadeAndStop
 
 			inFadeAndStop = false;
 
         } else if (inFadeAndPause) {
 
-			sbclass.paused = true; // inFadeAndPause ならば一時停止
+			sbclass.paused = true; // Pause if inFadeAndPause
 
 			inFadeAndPause = false;
 
@@ -178,7 +176,7 @@ class KAGSoundBuffer
 
 		if(ps == "play" && cs == "stop")
 
-			owner.onSoundBufferStop(this); // play => stop : 演奏が停止した
+			owner.onSoundBufferStop(this); // play => stop : Playback stopped
 
 	}
 
@@ -216,7 +214,7 @@ class KAGWaveSoundBuffer extends WaveSoundBuffer, KAGSoundBuffer
 
     function onLabel(label) {
 
-		// owner == instanceof "BGM" なので owner.owner == kag ということに注意
+		// Note that owner == instanceof "BGM", so owner.owner == kag
 
         owner.owner.onBGMLabel(label);
 
@@ -224,7 +222,7 @@ class KAGWaveSoundBuffer extends WaveSoundBuffer, KAGSoundBuffer
 
 }
 
-// WaveSoundBufferがサポートする拡張子一覧
+// List of extensions supported by WaveSoundBuffer
 
 KAGSoundBuffer.SupportedExtensions = [ "wav", "ogg", "tcw" ];
 
@@ -264,41 +262,41 @@ class BGM
 
 {
 
-	var owner; // このオブジェクトを保持する KAGWindow クラスのオブジェクト
+	var owner; // Object of the KAGWindow class that holds this object
 
 
 
-	var type = "Wave"; // BGM タイプ
+	var type = "Wave"; // BGM type
 
-	var cdVolume = "xxxx"; // 演奏に使用する CD の ボリュームラベル
+	var cdVolume = "xxxx"; // Volume label of the CD used for playback
 
-	var doubleBuffered = true; // クロスフェードを行うか
+	var doubleBuffered = true; // Whether to perform crossfading
 
-	var midiInitialMessage = <% %>; // MIDI 初期化メッセージ
+	var midiInitialMessage = <% %>; // MIDI initialization message
 
 
 
-	var buf1; // バッファ 1
+	var buf1; // Buffer 1
 
-	var buf2; // バッファ 2
+	var buf2; // Buffer 2
 
 	var currentBuffer;  // buf1 or buf2
 
-	var looping = true; // ループ中かどうか
+	var looping = true; // Whether looping is active
 
-    var volume = 100000; // ボリューム
-
-
-
-	var playingStorage; // 演奏中のストレージ
-
-	var currentStorage; // 見かけの演奏中のストレージ
+    var volume = 100000; // Volume
 
 
 
+	var playingStorage; // Storage currently playing
+
+	var currentStorage; // Apparent storage currently playing
 
 
-	var _enabled; // 有効かどうか
+
+
+
+	var _enabled; // Whether it is enabled
 
 
 
@@ -318,7 +316,7 @@ class BGM
 
 
 
-		createBuffers(); // サウンドバッファを作成
+		createBuffers(); // Create sound buffers
 
 
 
@@ -360,8 +358,8 @@ class BGM
 				buf1 = new KAGCDDASoundBuffer(this);
 				if(doubleBuffered)
 				{
-					throw new Exception("CDDA ではクロスフェードを行えません。"
-						"doubleBuffered = false に設定してください。");
+					throw new Exception("Crossfading is not available for CDDA. "
+						"Please set doubleBuffered = false.");
 				}
 			}
 			
@@ -378,7 +376,7 @@ class BGM
 
 	{
 
-		// バッファを解放する
+		// Free the buffers
 
 		invalidate buf1 if buf1 !== void;
 
@@ -392,19 +390,19 @@ class BGM
 
 	{
 
-		// デバイスの変更 
+		// Change device 
 
 		var flags = %[];
 
-		store(flags); // いったん状態を保存
+		store(flags); // Temporarily save state
 
-		freeBuffers(); // バッファの解放
+		freeBuffers(); // Free buffers
 
 		type = newtype;
 
-		createBuffers(); // バッファの作成
+		createBuffers(); // Create buffers
 
-		restore(flags); // 状態を復帰
+		restore(flags); // Restore state
 
 	}
 
@@ -414,11 +412,11 @@ class BGM
 
 	{
 
-		// buf に対して演奏を開始させる
+		// Start playback on buf
 
 
 
-		// 拡張子やドライブ文字が省略された場合、検索を行う
+		// Perform search if extension or drive letter is omitted
 
 		var found = true;
 
@@ -436,9 +434,9 @@ class BGM
 
 				{
 
-					// 使用可能な CD が見つからない
+					// No usable CD found
 
-					dm("ボリュームラベル " + cdVolume + " を持った CD がドライブに入っていません");
+					dm("A CD with volume label " + cdVolume + " is not in the drive");
 
 					return; //------
 
@@ -468,9 +466,9 @@ class BGM
 
 				@if (BGM_SUPPORT_MULTISONGS)
 
-				// wuプラグインがマルチソングをサポートする場合に
+				// If the wu plugin supports multisongs,
 
-				// ファイル名に"|"を渡すことでそれ以降の文字列をオプションとして認識させる
+				// passing "|" in the filename allows subsequent strings to be recognized as options.
 
 				var option;
 
@@ -520,7 +518,7 @@ class BGM
 
 			{
 
-				owner.errorSound(storage + ":BGMファイルがありません");
+				owner.errorSound(storage + ": BGM file not found");
 
                 return;
 
@@ -532,11 +530,11 @@ class BGM
 
 			{
 
-				buf.looping = loop; // 引数の "loop"
+				buf.looping = loop; // Argument "loop"
 
 				buf.open(storage);
 
-                // ごう追加 再生位置制御
+                // Added by Gou: Playback position control
 
                 if (start !== void &&
 
@@ -562,7 +560,7 @@ class BGM
 
 			{
 
-				owner.errorSound(storage + ":BGMが再生できません : " + e.message);
+				owner.errorSound(storage + ": Cannot play BGM : " + e.message);
 
                 return;
 
@@ -580,13 +578,13 @@ class BGM
 
 	{
 
-		// elm.storage で与えられた BGM の演奏を開始
+		// Start BGM playback given by elm.storage
 
-		// elm.loop が true ならばループ再生を行う
+		// Perform loop playback if elm.loop is true
 
-		// elm.paused が true ならばポーズされた状態で演奏を開始する
+		// Start playback in a paused state if elm.paused is true
 
-		// buf1 で演奏を行う
+		// Perform playback on buf1
 
 		var loop = elm.loop === void ? true : +elm.loop;
 
@@ -606,11 +604,11 @@ class BGM
 
 		{
 
-			dm("BGM の停止に失敗しました(実行は続行できます) : " + e.message);
+			dm("Failed to stop BGM (execution can continue) : " + e.message);
 
 		}
 
-		stopFade(); // フェーディングは終了
+		stopFade(); // Fading ended
 
         buf1.volume = volume;
 
@@ -618,11 +616,11 @@ class BGM
 
 		if(loop)
 
-			currentStorage = elm.storage; // ループ演奏の場合
+			currentStorage = elm.storage; // For loop playback
 
 		else
 
-			currentStorage = ""; // 単発演奏の場合
+			currentStorage = ""; // For one-shot playback
 
 		playingStorage = elm.storage;
 
@@ -636,7 +634,7 @@ class BGM
 
 	{
 
-        // 音量 0 から演奏を開始し、フェードインする
+        // Start playback from volume 0 and fade in
 
 		var loop = elm.loop === void ? true : +elm.loop;
 
@@ -660,7 +658,7 @@ class BGM
 
 		{
 
-			dm("BGM の停止に失敗しました(実行は続行できます) : " + e.message);
+			dm("Failed to stop BGM (execution can continue) : " + e.message);
 
 		}
 
@@ -684,7 +682,7 @@ class BGM
 
 	{
 
-		// 演奏を停止
+		// Stop playback
 
 		try
 
@@ -700,7 +698,7 @@ class BGM
 
 		{
 
-			dm("BGM の停止に失敗しました(実行は続行できます) : " + e.message);
+			dm("Failed to stop BGM (execution can continue) : " + e.message);
 
 		}
 
@@ -718,7 +716,7 @@ class BGM
 
 	{
 
-		// 演奏を一時停止
+		// Pause playback
 
 		buf1.paused = true;
 
@@ -732,7 +730,7 @@ class BGM
 
 	{
 
-		// 演奏を再開
+		// Resume playback
 
 		buf1.volume = volume if (resetVolume);
 
@@ -748,7 +746,7 @@ class BGM
 
 	{
 
-		// フェードアウト
+		// Fade out
 
 //		stopFade();
 
@@ -790,7 +788,7 @@ class BGM
 
 	{
 
-		// 指定音量までフェード
+		// Fade to specified volume
 
 		var time = elm.time === void ? 5000 : +elm.time;
 
@@ -828,27 +826,25 @@ class BGM
 
 	{
 
-		// 曲を入れ替える
+		// Swap tracks
 
-		// 現在演奏中の曲は time で指定された時間をかけてフェードアウトされ、
+		// The currently playing track will fade out over the time specified by 'time',
 
-		// storage で指定された曲が time で指定された時間をかけてフェードイン
+		// and the track specified by 'storage' will fade in over the time specified by 'time'
 
-		// 再生される。
+		// and play.
 
-		// time が指定されていなくて、intime と outtime が指定されている場合は、
+		// If 'time' is not specified but 'intime' and 'outtime' are,
 
-		// intime でフェードイン時間、outime でフェードアウト時間を指定したこと
+		// it will use 'intime' for fade-in and 'outtime' for fade-out duration.
 
-		// になる。
+		// 'overlap' is the wait time between the fade-out of the current track
 
-		// overlap には、現在演奏中の曲がフェードアウトされてから新しい曲が
+		// and the fade-in of the new track (note that positive/negative values are reversed),
 
-		// フェードインされるまでの待ち時間(ただし与える値の正負は逆)で、
+		// a positive value results in a crossfade.
 
-		// 正の値を指定するとクロスフェードになる。
-
-		// storage は、このメソッドが呼ばれた時点で演奏を開始する
+		// 'storage' starts playback as soon as this method is called.
 
 
 
@@ -890,7 +886,7 @@ class BGM
 
 		{
 
-			// 無効になっている場合は 一応 play を呼んでからそのまま返る
+			// If disabled, call 'play' just in case and return.
 
 			play(elm);
 
@@ -904,7 +900,7 @@ class BGM
 
 		{
 
-			// 現在演奏中の曲がない場合は、単なるフェードインと同じ動作になる
+			// If no track is currently playing, it behaves like a simple fade-in.
 
 			elm.time = intime;
 
@@ -924,17 +920,13 @@ class BGM
 
 		{
 
-			// ダブルバッファリングの場合
+			// For double buffering
 
 			if(outtime != 0)
 
-				currentBuffer.fadeOutAndStop(outtime); // 現在演奏中の BGM をフェードアウト
+				currentBuffer.fadeOutAndStop(outtime); // Fade out current BGM
 
-			else
-
-				currentBuffer.stop();
-
-			var nextbuffer; // 次の演奏バッファ
+			var nextbuffer; // Next playback buffer
 
 			nextbuffer = (currentBuffer == buf1) ? buf2 : buf1;
 
@@ -950,9 +942,9 @@ class BGM
 
 		{
 
-			// シングルバッファリングの場合
+			// For single buffering
 
-			play(elm); // 単に次の曲を演奏するだけ
+			play(elm); // Simply play the next track
 
 		}
 
@@ -1016,9 +1008,9 @@ class BGM
 
 		{
 
-			// 大域ボリューム
+			// Global volume
 
-			var sysvar = owner.scflags; // システム(コア)変数
+			var sysvar = owner.scflags; // System (core) variable
 
 			if(sysvar.bgm === void) sysvar.bgm = %[];
 
@@ -1050,7 +1042,7 @@ class BGM
 
 
 
-	property inFading // フェード中かどうかを返す
+	property inFading // Return whether fading is in progress
 
 	{
 
@@ -1060,7 +1052,7 @@ class BGM
 
 
 
-	property canWaitStop // BGM の終了を待てるかどうかを返す
+	property canWaitStop // Return whether playback end can be awaited
 
 	{
 
@@ -1080,7 +1072,7 @@ class BGM
 
 
 
-	// ラベル待ち
+	// Label wait
 
 	function canWaitLabel(name) {
 
@@ -1088,9 +1080,9 @@ class BGM
 
 		if (linfo !== void) {
 
-			dm(name + " ラベル位置:" + linfo.samplePosition);
+			dm(name + " Label position:" + linfo.samplePosition);
 
-			dm("現在再生位置:" + currentBuffer.samplePosition);
+			dm("Current playback position:" + currentBuffer.samplePosition);
 
 		}
 
@@ -1108,7 +1100,7 @@ class BGM
 
 		{
 
-			// フェードが終了した
+			// Fading completed
 
 			owner.onBGMFadeCompleted();
 
@@ -1126,7 +1118,7 @@ class BGM
 
 		{
 
-			// 演奏が終了した
+			// Playback completed
 
 			playingStorage = "";
 
@@ -1144,7 +1136,7 @@ class BGM
 
 	{
 
-		// 辞書配列に現在の状態を待避
+		// Save current state to dictionary array
 
 		var dic = %[];
 
@@ -1164,7 +1156,7 @@ class BGM
 
 	{
 
-		// 辞書配列から現在の状態を復帰
+		// Restore current state from dictionary array
 
 		stopFade();
 
@@ -1186,9 +1178,9 @@ class BGM
 
 	{
 
-		// システム変数 dic から情報を設定する
+		// Set information from system variable dic
 
-		// 大域ボリュームの情報を得る
+		// Get global volume information
 
         var sysvar = dic.bgm;
 
@@ -1226,7 +1218,7 @@ class BGM
 
 
 
-    // true の場合はボリューム補正する
+    // If true, apply volume correction
 
     var _voldown;
 
@@ -1270,7 +1262,7 @@ class BGM
 
             currentBuffer.looping = loop;
 
-            // ループするときはフラグ0を0にしておくルールに!
+            // Rule: Set flag 0 to 0 when looping!
 
             currentBuffer.flags[0] = loop ? 0 : 1;
 
@@ -1283,6 +1275,3 @@ class BGM
 
 
 }
-
-
-

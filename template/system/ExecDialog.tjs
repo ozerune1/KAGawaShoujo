@@ -1,16 +1,31 @@
-﻿// シナリオ起動
-function execDialog()
-{
-	try {
-		var scn = System.inputString("シナリオの読込み", "実行するシナリオファイルを入力",
-									 Storages.extractStorageName(kag.currentStorage));
-		if (scn != "") {
-			kag.setConductorToMain(); // extraconductor使用中ならmainに戻す
-			kag.conductor.clear();
-			kag.process(scn, "");
-			return true;
-		}
-	} catch(e) {
-		Debug.notice("シナリオを実行できませんでした : " + e.message);
-	}
-}
+// Scenario Launch
+
+function execDialog()
+
+{
+
+	try {
+
+		var scn = System.inputString("Load Scenario", "Enter the scenario file to execute",
+
+									 Storages.extractStorageName(kag.currentStorage));
+
+		if (scn != "") {
+
+			kag.setConductorToMain(); // If extraconductor is in use, return to main
+
+			kag.conductor.clear();
+
+			kag.process(scn, "");
+
+			return true;
+
+		}
+
+	} catch(e) {
+
+		Debug.notice("Could not execute scenario : " + e.message);
+
+	}
+
+}
