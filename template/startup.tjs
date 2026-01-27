@@ -1,8 +1,16 @@
-﻿// startup.tjs - スタートアップスクリプト
-// Copyright (C) 2001, W.Dee  改変・配布は自由です
-
-if (typeof(Plugins.cxdec) != "undefined")
-    Plugins.cxdec.registerLicenseMagicNumber(Plugins.cxdec.licenseMagicNumber);
-
-// このスクリプトは一番最初に実行されるスクリプトです
-Scripts.execStorage("system/Initialize.tjs"); // system/Initialize.tjs を実行
+﻿// startup.tjs - Startup Script
+
+// Copyright (C) 2001, W.Dee  Modification and distribution are free.
+
+
+
+if (typeof(Plugins.cxdec) != "undefined")
+
+    Plugins.cxdec.registerLicenseMagicNumber(Plugins.cxdec.licenseMagicNumber);
+
+
+
+// This script is the very first script to be executed.
+
+Scripts.execStorage("system/Initialize.tjs"); // Execute system/Initialize.tjs
+

@@ -1,4 +1,8 @@
-﻿[wait time=200]
-*start|スタート
-[cm]
-こんにちは。
+﻿[wait time=200]
+
+*start|Start
+
+[cm]
+
+Hello.
+
