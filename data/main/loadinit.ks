@@ -1,5 +1,5 @@
-﻿; ロード前、階層前の初期化処理を記述しておく
-; Override.tjs でのロード処理や回想処理の直前に一気に実行される処理なので
-; 途中に待ちがはいるような記述はしてはいけない
-[clearhistory]
-[initscene]
+﻿; Write initialization processing before loading or recollections
+; Since this is executed all at once immediately before load or recollection processing in Override.tjs
+; do not include any scripts that pause execution
+[clearhistory]
+[initscene]
