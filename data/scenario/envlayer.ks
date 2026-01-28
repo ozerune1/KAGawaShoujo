@@ -2,8 +2,8 @@
 
 [initscene]
 
-[道路]
-[あい 制服 中]
+[road]
+[ai uniform center]
 This is a sample of the World Extension's "Environment Layer". It can be applied to staging effects such as cut-ins.
 
 [newlay name=star1 file=star  xpos=0 ypos=0 show]Show Star 1

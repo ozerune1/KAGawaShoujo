@@ -14,7 +14,7 @@
 
 			],
 
-		"夕" => %[
+		"evening" => %[
 
 			"prefix" => "02",
 
@@ -36,7 +36,7 @@
 
 			],
 
-		"夜" => %[
+		"night" => %[
 
 			"prefix" => "03",
 
@@ -96,55 +96,55 @@
 
 		// Display definition (face display has no meaning if the face window function is not present)
 
-		"出" => %[ "disp" => KAGEnvImage.BOTH      ], // Display both standing image and face
+		"both" => %[ "disp" => KAGEnvImage.BOTH      ], // Display both standing image and face
 
-		"立" => %[ "disp" => KAGEnvImage.BU        ], // Display standing image only
+		"body" => %[ "disp" => KAGEnvImage.BU        ], // Display standing image only
 
-		"顔" => %[ "disp" => KAGEnvImage.FACE      ], // Display face only
+		"face" => %[ "disp" => KAGEnvImage.FACE      ], // Display face only
 
-		"消" => %[ "disp" => KAGEnvImage.CLEAR     ], // Temporarily hide (auto-display upon state change is active) *This is generally used
+		"hide" => %[ "disp" => KAGEnvImage.CLEAR     ], // Temporarily hide (auto-display upon state change is active) *This is generally used
 
-		"無" => %[ "disp" => KAGEnvImage.INVISIBLE ], // Completely hide (auto-display upon state change is also disabled)
+		"none" => %[ "disp" => KAGEnvImage.INVISIBLE ], // Completely hide (auto-display upon state change is also disabled)
 
 
 
 		// Position definition
 
-		"左奥" => %[ "xpos" => int -440 ],
+		"farleft" => %[ "xpos" => int -440 ],
 
-		"右奥" => %[ "xpos" => int  440 ],
+		"farright" => %[ "xpos" => int  440 ],
 
 		"posleft"   => %[ "xpos" => int -200 ],
 
 		"posright"   => %[ "xpos" => int  200 ],
 
-		"左中" => %[ "xpos" => int -100 ],
+		"midleft" => %[ "xpos" => int -100 ],
 
-		"右中" => %[ "xpos" => int  100 ],
+		"midright" => %[ "xpos" => int  100 ],
 
-		"左外" => %[ "xpos" => int -600 ],
+		"outleft" => %[ "xpos" => int -600 ],
 
-		"右外" => %[ "xpos" => int  600 ],
+		"outright" => %[ "xpos" => int  600 ],
 
-		"中"   => %[ "xpos" => int    0 ],
+		"center"   => %[ "xpos" => int    0 ],
 
 
 
 		// ypos is often specified individually directly
 
-//		"縦デフォルト" => %[ "ypos" => int    0 ],
+//		"vDefault" => %[ "ypos" => int    0 ],
 
-//		"縦しゃがみ"   => %[ "ypos" => int   50 ],
+//		"vCrouch"   => %[ "ypos" => int   50 ],
 
-//		"縦背伸び"     => %[ "ypos" => int  -20 ],
+//		"vStretch"     => %[ "ypos" => int  -20 ],
 
 
 
-		"奥"   => %[ "level" => int 0 ],
+		"backlevel"   => %[ "level" => int 0 ],
 
-		"前"   => %[ "level" => int 1 ],
+		"centerlevel"   => %[ "level" => int 1 ],
 
-		"手前" => %[ "level" => int 2 ],
+		"frontlevel" => %[ "level" => int 2 ],
 
 		],
 
@@ -212,7 +212,7 @@
 
     "actions" => %[
 
-		"おじぎ" => %[
+		"bow" => %[
 
 			"module" => "LayerJumpOnceActionModule",
 
@@ -222,7 +222,7 @@
 
 			],
 
-		"どっきり" => %[
+		"shock" => %[
 
 			"module" => "LayerHeartBeatZoomModule",
 
@@ -232,7 +232,7 @@
 
 			],
 
-		"びょんびょん" => %[
+		"hop" => %[
 
 			"module" => "LayerJumpActionModule",
 
@@ -242,7 +242,7 @@
 
 			],
 
-		"びょんびょん待ち無" => %[
+		"hopNoWait" => %[
 
 			"module" => "LayerJumpActionModule",
 
@@ -254,7 +254,7 @@
 
 			],
 
-		"ガクガク" => %[
+		"shiver" => %[
 
 			"module" => "LayerVibrateActionModule",
 
@@ -280,7 +280,7 @@
 
 
 
-		"パス移動テスト" => %[ // Batch specification of multiple movements
+		"path_test" => %[ // Batch specification of multiple movements
 
 						   "time" => 1000,
 
@@ -290,7 +290,7 @@
 
 
 
-		"パス移動テスト2" => %[ // KAG move compatible notation
+		"path_test2" => %[ // KAG move compatible notation
 
 								"time" => 3000,
 
@@ -362,7 +362,7 @@
 
 
 
-		"タイルスライド" => %[
+		"title_slide" => %[
 
 			"tilex" => %[ handler:"LoopMoveAction", max:800, loop:2000 ],
 
@@ -372,7 +372,7 @@
 
 
 
-		"横スライド" => %[
+		"side_slide" => %[
 
 			"tilex"  => %[ handler:"LoopMoveAction", max:2700, loop:2700 ],
 
@@ -382,33 +382,33 @@
 
 
 
-		"モーションアクション" => %[
+		"motion_action" => %[
 
-			"motion"  => %[ handler:"MotionAction", storage:"action.psb", chara:"action", motion:"motion1", layer:"レイヤ1" ],
-
-			],
-
-
-
-		"モーションアクション2" => %[
-
-			"motion"  => %[ handler:"MotionAction", storage:"action.psb", chara:"action", motion:"motion2", layer:"レイヤ1" ],
+			"motion"  => %[ handler:"MotionAction", storage:"action.psb", chara:"action", motion:"motion1", layer:"layer1" ],
 
 			],
 
 
 
-		"モーションアクション3" => %[
+		"motion_action2" => %[
 
-			"motion"  => %[ handler:"MotionAction", storage:"action.psb", chara:"action", motion:"motion3", layer:"レイヤ1" ],
+			"motion"  => %[ handler:"MotionAction", storage:"action.psb", chara:"action", motion:"motion2", layer:"layer1" ],
 
 			],
 
 
 
-		"モーションアクション4" => %[
+		"motion_action3" => %[
 
-			"motion"  => %[ handler:"MotionAction", storage:"action.psb", chara:"action", motion:"motion4", layer:"レイヤ1" ],
+			"motion"  => %[ handler:"MotionAction", storage:"action.psb", chara:"action", motion:"motion3", layer:"layer1" ],
+
+			],
+
+
+
+		"motion_action4" => %[
+
+			"motion"  => %[ handler:"MotionAction", storage:"action.psb", chara:"action", motion:"motion4", layer:"layer1" ],
 
 			],
 
@@ -586,7 +586,7 @@
 
 					"dresses" => %[
 
-						"制服"     => "0",
+						"uniform"     => "0",
 
 						],
 
@@ -598,11 +598,11 @@
 
 					"faces" => %[
 
-						"喜"    => "1",
+						"happy"    => "1",
 
-						"怒"    => "2",
+						"angry"    => "2",
 
-						"哀"    => "3",
+						"sad"    => "3",
 
 						],
 

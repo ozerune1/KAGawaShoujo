@@ -4,9 +4,9 @@
 [initscene]
 
 ; BGM Playback
-[道路 normal]
+[road normal]
 
-[あい 通常 中]
+[ai standard center]
 Character appearance
 
 [newlay name=starf fire=star firecolor=red xpos=0 ypos=0 show]
