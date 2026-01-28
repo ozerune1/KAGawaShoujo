@@ -3,32 +3,32 @@
 ; Environment initialization process
 [initscene]
 
-[道路 normal]
+[road normal]
 
 This is a test sample for KAGEX show/hide actions.
 
-[あい 通常 showslide]
+[ai standard showslide]
 Character appearance (slide)
 
-[あい hide showslide]
+[ai hide showslide]
 Character removal (slide)
 
-[あい 通常 showzoom]
+[ai standard showzoom]
 Character appearance (zoom)
 
-[あい hide showzoom]
+[ai hide showzoom]
 Character removal (zoom)
 
-[あい 左 showslide nosync]
-[newchar name=あい2 initname=あい 右 showzoom nosync]
+[ai posleft showslide nosync]
+[newchar name=ai2 initname=ai posright showzoom nosync]
 Simultaneous display (nosync specified)
 
 This is a sample of composite actions.
 
-[あい 連続テスト]
-Multiple continuous actions can be executed as a single action.
+[ai sequence_test]
+Multiple continuous actions can be executed as asingle action.
 
-[あい 連続テスト２]
+[ai sequence_test2]
 Example 2. This is a combination of separately defined actions.
 
 End
