@@ -1,145 +1,144 @@
-﻿*start|スタート
-
-; 環境初期化処理
-[initscene]
-
-; BGM再生
-[bgm01]
-[道路 normal]
-
-KAGEX ワールド拡張を用いたスクリプティングのサンプルです。
-比較的シンプルな記述で高度な演出を行うことができます。
-char.ks を開いて実際のファイルを比較しながら見るとわかりやすいです。
-
-
-[あい 通常 中]
-キャラクタ出現
-
-【あい】規定の書式で自動的に名前表示・テキスト表示・キー入力待ちが行われます
-【あい/？？？】表示名を変更する場合はスラッシュにつづけて表示名を記載すればＯＫです
-【あい】ボイス番号が指定されているとテキストにあわせてボイスが再生されます。
-【あい】自動再生時の処理待ちも自動的に調整されます。次のテキストでボイスがなります
-
-[あい voice=1]
-【あい】中三マキロン地獄
-
-[あい clearvoice]
-【あい】ちなみにデバッグメニューでボイス再生速度を変更できます
-
-; 回想終了ポイント
-[endrecollection]
-
-[あい 左]
-キャラクタ移動（左）
-
-[あい 奥]
-キャラクタレベル変更（奥）
-
-[あい 中]
-キャラクタ移動（中）
-
-[あい 手前]
-キャラクタレベル変更（手前）
-
-[あい 前]
-キャラクタ移動（前）
-
-[あい hide]
-キャラクタ消去
-
-[あい 左 fade]
-キャラクタ出現・フェード制御
-
-[あい 消 fade]
-キャラクタ消去・フェード制御
-
-[あい 中]
-キャラクタ出現
-
-[あい rotate=30 time=1000][あい zoom=120 time=1000]
-レイヤ回転・ズーム制御（動作シンクロしない場合）
-
-[あい rotate=0 time=1000 sync][あい zoom=100 time=1000 sync]
-レイヤ回転・ズーム制御（動作シンクロする場合）
-
-[夕 normal]
-夕方（キャラクタは自動的に色補正されます）
-
-[夜 normal]
-夜（キャラクタは自動的に色補正されます）
-
-[あい zoom=150 time=1000]
-レイヤ拡大制御 
-
-[あい opacity=100 time=1000]
-透明度制御
-
-[あい reset]
-レイヤ状態初期化
-
-; イベント絵を表示
-[EV file=event1 fade]
-イベント絵を表示しました。
-
-[EV rotate=30 time=1000]
-イベント絵を回転
-
-[EV rotate=@+30 time=1000]
-イベント絵を回転（相対指定）※相対指定書式かわりました。スマヌ
-
-[EV zoom=200 time=1000]
-イベント絵をズーム処理
-
-[EV zoom=@-50 time=1000]
-イベント絵をズーム処理（相対指定）
-
-[EV hide fade]
-イベント絵消去
-
-[昼 normal]
-
-[あい 喜]
-表情変更（喜）
-
-[あい 怒]
-表情変更（怒）
-
-[あい 右 time=500]
-時間指定あり場所移動（→右） 
-
-[あい 右:中 time=500]
-初期位置指定で場所移動（中→右）
-
-[あい 右:中 opacity=255:0 time=500]
-初期位置指定で場所移動（中→左 透明度制御あり）
-
-[あい opacity=255:0 zoom=100:140 time=500]
-ズームと複合
-
-*label6|キャラアクション
-
-[newchar name=あい2 initname=あい 中 opacity=255:0 zoom=100:140 time=300 sync]
-[newchar name=あい3 initname=あい 左 opacity=255:0 zoom=100:140 time=300 sync]
-分身の術
-
-[あい おじぎ]
-[あい2 びょんびょん]
-[あい3 ガクガク]
-おじぎ/びょんびょん/ガクガク アクションをそれぞれに適用
-
-[あい 右中 time=500]
-[あい3 左中 time=500]
-かさなるように移動
-
-[あい2 front]
-あい2を前面に出す
-
-[あい2 back]
-あい2を後面にさげる
-
-[あい  xpos=-800 time=500]
-[あい2 xpos=-800 time=500]
-[あい3 xpos=-800 time=500]
-おしまい
-
-[jump storage=s0001.ks]
+﻿*start|Start
+
+; Environment initialization process
+[initscene]
+
+; BGM Playback
+[bgm01]
+[道路 normal]
+
+This is a scripting sample using KAGEX World Extension.
+You can perform advanced staging with relatively simple descriptions.
+It's easier to understand if you open char.ks and compare it with the actual file.
+
+[あい 通常 中]
+Character appearance
+
+【Ai】Name display, text display, and key input wait are automatically performed in the prescribed format.
+【Ai/???】To change the display name, just write the display name after the slash.
+【Ai】If a voice number is specified, the voice will be played along with the text.
+【Ai】Processing wait during auto-play is also automatically adjusted. The voice will play in the next text.
+
+[あい voice=1]
+【Ai】Junior High 3 Makiron Hell
+
+[あい clearvoice]
+【Ai】By the way, you can change the voice playback speed in the debug menu.
+
+; Recollection end point
+[endrecollection]
+
+[あい 左]
+Character movement (Left)
+
+[あい 奥]
+Character level change (Back)
+
+[あい 中]
+Character movement (Center)
+
+[あい 手前]
+Character level change (Front)
+
+[あい 前]
+Character movement (Forward)
+
+[あい hide]
+Character removal
+
+[あい 左 fade]
+Character appearance/fade control
+
+[あい 消 fade]
+Character removal/fade control
+
+[あい 中]
+Character appearance
+
+[あい rotate=30 time=1000][あい zoom=120 time=1000]
+Layer rotation/zoom control (when actions are not synchronized)
+
+[あい rotate=0 time=1000 sync][あい zoom=100 time=1000 sync]
+Layer rotation/zoom control (when actions are synchronized)
+
+[夕 normal]
+Evening (Characters are automatically color-corrected)
+
+[夜 normal]
+Night (Characters are automatically color-corrected)
+
+[あい zoom=150 time=1000]
+Layer zoom control 
+
+[あい opacity=100 time=1000]
+Opacity control
+
+[あい reset]
+Reset layer state
+
+; Show event image
+[EV file=event1 fade]
+The event image has been displayed.
+
+[EV rotate=30 time=1000]
+Rotate event image
+
+[EV rotate=@+30 time=1000]
+Rotate event image (Relative specification) *The relative specification format has changed. Sorry.
+
+[EV zoom=200 time=1000]
+Zoom event image
+
+[EV zoom=@-50 time=1000]
+Zoom event image (Relative specification)
+
+[EV hide fade]
+Remove event image
+
+[昼 normal]
+
+[あい 喜]
+Expression change (Happy)
+
+[あい 怒]
+Expression change (Angry)
+
+[あい 右 time=500]
+Movement with time specification (→Right) 
+
+[あい 右:中 time=500]
+Movement with initial position specified (Center→Right)
+
+[あい 右:中 opacity=255:0 time=500]
+Movement with initial position specified (Center→Left with opacity control)
+
+[あい opacity=255:0 zoom=100:140 time=500]
+Combined with zoom
+
+*label6|Character Action
+
+[newchar name=あい2 initname=あい 中 opacity=255:0 zoom=100:140 time=300 sync]
+[newchar name=あい3 initname=あい 左 opacity=255:0 zoom=100:140 time=300 sync]
+Cloning technique
+
+[あい おじぎ]
+[あい2 びょんびょん]
+[あい3 ガクガク]
+Applying Bow/Boing/Shake actions to each respectively
+
+[あい 右中 time=500]
+[あい3 左中 time=500]
+Move so they overlap
+
+[あい2 front]
+Bring Ai2 to the front
+
+[あい2 back]
+Move Ai2 to the back
+
+[あい  xpos=-800 time=500]
+[あい2 xpos=-800 time=500]
+[あい3 xpos=-800 time=500]
+The End
+
+[jump storage=s0001.ks]

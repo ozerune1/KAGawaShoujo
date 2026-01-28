@@ -1,12 +1,17 @@
-﻿*start|テストシナリオ
-
-[initscene]
-
-[seladd text="KAGEX 拡張レイヤ"            storage=layer.ks]
-[seladd text="ワールド拡張:キャラクタ"     storage=char.ks]
-[seladd text="ワールド拡張:レイヤ"         storage=envlayer.ks]
-[seladd text="ワールド拡張:トランジション" storage=transition.ks]
-[seladd text="ワールド拡張:拡張アクション" storage=action.ks]
-[select]
-
-[jump target=*start]
+﻿*start|Test Scenario
+
+[initscene]
+
+[seladd text="KAGEX Extended Layer" storage=layer.ks]
+
+[seladd text="World Extension: Character" storage=char.ks]
+
+[seladd text="World Extension: Layer" storage=envlayer.ks]
+
+[seladd text="World Extension: Transition" storage=transition.ks]
+
+[seladd text="World Extension: Extended Action" storage=action.ks]
+
+[select]
+
+[jump target=*start]
