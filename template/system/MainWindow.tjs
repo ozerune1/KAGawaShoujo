@@ -60,7 +60,103 @@ class KAGWindow extends Window
 
 	// is generated to be automatically copied to the bookmark by the terminal perl script.
 
+	var wrapNum = 0;
+	var wrapPos = 0;
+	var wrapPosHist = 0;
+	var wrapOldLine = void;
+	var wrapSplitLine = void;
+	var wrapBreakWrap = 0;
+	var wrapNewPage = 0;
+	var wrapLabel = void;
+	var wrapComp = void;
+	var spaceChar = " ";
+	var newlineTag = "[r]";
 
+	function needsToBeWrapped(text) {
+		var textHist = text;
+		if(conductor.curLineStr[0] == "*" || conductor.curLineStr[0] == "[" || conductor.curLineStr[0] == ";" || 
+       conductor.curLineStr[0] == "\t") return false;
+		if(conductor.curLineStr.indexOf(newlineTag)!=-1) return false;
+    
+		if(conductor.curLineStr.indexOf(spaceChar)!=-1)
+		{
+			var cleanStr = void;
+
+			for(var i=0,depth=0; i<conductor.curLineStr.length; i++)
+			{
+				if(conductor.curLineStr[i]!='[')
+				{
+					if(conductor.curLineStr[i]!='\\')
+					cleanStr += conductor.curLineStr[i];
+				} else {
+					for(var depth=0; i<conductor.curLineStr.length; i++)
+					{
+						if(conductor.curLineStr[i]=='[')
+						{
+							depth++;
+						}
+						else if(conductor.curLineStr[i]==']')
+						{
+							depth--;
+							if(depth<=0) break;
+						}
+					}
+				}
+			}
+
+			if(wrapLabel != currentLabel || wrapComp != cleanStr)
+			{
+				wrapLabel = currentLabel;
+				wrapOldLine = conductor.curLineStr;
+				wrapBreakWrap = 0;
+
+				if(cleanStr===void || cleanStr.indexOf(spaceChar)==-1)
+				{
+					wrapBreakWrap = 1;
+				} else {
+					wrapSplitLine = cleanStr.split(spaceChar);
+					wrapPos = current.vertical ? current.y+current.lineLayer.font.getTextWidth(spaceChar) : current.x;
+					wrapPosHist = historyLayer.font.getTextWidth(historyLayer.currentLine);
+					wrapNum = 0;
+				}
+				wrapComp = wrapSplitLine.join(spaceChar);
+			}
+
+			if(!wrapBreakWrap)
+			{
+				if(text==spaceChar)
+				{
+					if(wrapNewPage != 1) wrapNum++;
+					wrapSplitLine[wrapNum] += spaceChar;
+					wrapPos = current.vertical ? current.y+current.lineLayer.font.getTextWidth(spaceChar) : current.x;
+					wrapPosHist = historyLayer.font.getTextWidth(historyLayer.currentLine);
+				}
+
+				if(historyWriteEnabled && wrapPosHist+historyLayer.font.getTextWidth(wrapSplitLine[wrapNum]) >= historyLayer.relinePos)
+				{
+					if(historyLayer.font.getTextWidth(wrapSplitLine[wrapNum])<=historyLayer.relinePos)
+					{
+						textHist = "";
+						historyLayer.reline();
+						wrapPosHist = historyLayer.font.getTextWidth(historyLayer.currentLine);
+					}
+				}
+
+				if(wrapPos+current.lineLayer.font.getTextWidth(wrapSplitLine[wrapNum])>=current.relinexpos)
+				{
+					if(current.lineLayer.font.getTextWidth(wrapSplitLine[wrapNum])<=current.relinexpos)
+					{
+						text = "";
+						if(current.processReturn()) wrapNewPage = 1;
+					}
+					wrapPos = current.vertical ? current.y+current.lineLayer.font.getTextWidth(spaceChar) : current.x;
+					if(wrapNewPage==1) return true;
+				}
+			}
+		}
+
+		return false;
+	}
 
 	var scWidth = 640; // Screen width
 
@@ -14692,6 +14788,7 @@ class KAGWindow extends Window
 
     ch : function(elm)
     {
+		if (needsToBeWrapped(elm.text)) return showPageBreakAndClear();
 		if (skipNoDisp) { return 0;	}
 
 		if (lineMode && textWriteEnabled) {
