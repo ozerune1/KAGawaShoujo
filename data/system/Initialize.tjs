@@ -520,7 +520,7 @@ Plugins.link("scriptsEx.dll");
 
 Plugins.link("shrinkCopy.dll");
 
-//Plugins.link("gfxEffect.dll");
+//Plugins.link("krmovie.dll");
 
 Plugins.link("menu.dll");
 
