@@ -370,7 +370,7 @@ function fileDataButton(name, work)
         var savedatatitle = kag.getBookMarkPageName(savedatanum);
         savedatatitle = savedatatitle.substring(0,9);
         target.font.height=24;
-        target.font.face = "MS Gothic";
+        target.font.face = "playtime";
 
         // Thumbnail image cutting
         var thum = new global.Layer(kag, kag.fore.base);
@@ -691,7 +691,7 @@ function setCGImage(target, filename)
     target.operateRect(target.width*2+2,  2,layer2,0,0,layer2.imageWidth,layer2.imageHeight,omPsNormal);
 
     if (tf.viewcgfilename) {
-	    target.font.face = "MS Gothic";
+	    target.font.face = "playtime";
 	    target.font.height = 14;
 	    target.drawText(2,2,filename,0x000000,255,true,255,0x000000,2,2);
     }

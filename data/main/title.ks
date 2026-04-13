@@ -36,13 +36,7 @@
 
 [init]
 
-[clearlayers]
-
 [stopbgm]
-
-[stopvideo]
-
-[video visible=false]
 
 
 
@@ -58,7 +52,7 @@
 
 [position page=fore layer=message1 frame="" left=0 top=0 width=8 height=8 visible=false]
 
-[position page=fore layer=message0 frame="" opacity=0 left=0 top=0 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=false]
+[position page=fore layer=message0 frame="" opacity=0 left=0 top=0 width=1920 height=1080 marginT=0 marginL=0 marginR=0 marginB=0 visible=false]
 
 [current page=fore layer=message0]
 
@@ -76,9 +70,9 @@
 
 [backlay]
 
-[position page=back layer=message1 frame="" left=0 top=0 width=800 height=600 visible=false]
+[position page=back layer=message1 frame="" left=0 top=0 width=1920 height=1080 visible=false]
 
-[position page=back layer=message0 frame="title" opacity=255 left=0 top=0 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=true]
+[position page=back layer=message0 frame="title" opacity=255 left=0 top=0 width=1920 height=1080 marginT=0 marginL=0 marginR=0 marginB=0 visible=true]
 
 [current page=back layer=message0]
 
@@ -86,11 +80,11 @@
 
 ; Button layout
 
-[locate x=254 y=336]
+[locate x=140 y=600]
 
 [button name="start" target=*gamestart]
 
-[locate x=254 y=386]
+[locate x=140 y=675]
 
 [button name="continue" storage=load.ks target=*startFromTitle]
 
@@ -98,7 +92,7 @@
 
 ; Change display based on clear flag
 
-[locate x=254 y=436]
+[locate x=140 y=750]
 
 [if exp="sf.clear || tf.allseen"]
 
@@ -110,19 +104,25 @@
 
 [endif]
 
-[locate x=254 y=486]
+[locate x=140 y=825]
 
 [button name="config" storage=config.ks  target=*startFromTitle]
 
-[locate x=254 y=536]
+[locate x=140 y=900]
 
 [button name="exit" exp='kag.close()']
 
 
 
-[trans method=crossfade time=300]
-
-[wt]
+[if exp="tf.from_splash == 1"]
+    [trans method=turn time=1500]
+    [wt]
+    [freeimage layer="base" page="fore"]
+    [eval exp="tf.from_splash = 0"]
+[else]
+    [trans method=crossfade time=300]
+    [wt]
+[endif]
 
 [current layer=message0 page=fore]
 

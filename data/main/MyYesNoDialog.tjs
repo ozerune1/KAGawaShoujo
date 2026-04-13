@@ -396,8 +396,6 @@ class MyYesNoDialogLayer extends DialogLayer
 
         super.DialogLayer(kag, kag.primaryLayer, baseStorage + "Dialog");
 
-
-
         this.yesFunc = yesFunc;
 
         this.noFunc  = noFunc;
@@ -412,9 +410,9 @@ class MyYesNoDialogLayer extends DialogLayer
 
         setOption(%[frame : baseStorage]);
 
-        addButton(%[ x : 325, y : 305, normal:"dialog_yes_normal", over:"dialog_yes_over", on:"dialog_yes_over"]);
+        addButton(%[ x : 860, y : 550, normal:"dialog_yes_normal", over:"dialog_yes_over", on:"dialog_yes_over"]);
 
-        addButton(%[ x : 411, y : 305, normal:"dialog_no_normal", over:"dialog_no_over",  on:"dialog_no_over"]);
+        addButton(%[ x : 980, y : 550, normal:"dialog_no_normal", over:"dialog_no_over",  on:"dialog_no_over"]);
 
     }
 

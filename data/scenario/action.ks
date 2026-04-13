@@ -3,6 +3,8 @@
 ; Environment initialization process
 [initscene]
 
+[clickskip enabled=false]
+
 [road normal]
 
 This is a test sample for KAGEX show/hide actions.

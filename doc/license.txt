@@ -1,5 +1,0 @@
-﻿Title: About the KAGEX License
-Author: Tsuyoshi Watanabe
-Date: 2006/6/2
-
-The license for KAGEX is exactly the same as that of Kirikiri 2 and KAG3.

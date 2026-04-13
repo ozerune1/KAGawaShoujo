@@ -13,7 +13,7 @@
 // ◆ Title
 // The window caption (title) and what is 
 // displayed in the taskbar.
-;System.title = "KAGEX Sample";
+;System.title = "KAGawa Shoujo";
 
 
 // ◆ Scenario Analysis Mode
@@ -58,8 +58,8 @@ function KAGWindow_config()
 // Specify the screen width in scWidth and the screen height in scHeight in pixels.
 // If you set a screen size that is not a standard size like 640x480 or 800x600,
 // you may not be able to go full screen.
-;scWidth = 800;
-;scHeight = 600;
+;scWidth = 1920;
+;scHeight = 1080;
 
 
 // ◆ Read-only Mode
@@ -121,7 +121,7 @@ function KAGWindow_config()
 //       (Not including the leading //)
 // and press the Enter key to obtain it.
 // ( Example : "371a6289-a084-ee18-2885-66314a0aa19d" )
-;saveDataID = "5695173f-89f4-41c4-9f44-52addcd4c556"
+;saveDataID = "1acdbdf5-2d44-4876-87bd-4f74a34f5b97"
 
 
 // ◆ Save Mode
@@ -130,7 +130,7 @@ function KAGWindow_config()
 // Both "c" and "z" cannot be specified. Since compressing a bookmark results in 
 // data that cannot be easily read, bookmark compression also serves as encryption.
 // If "" is specified, bookmarks will not be encrypted or compressed.
-;saveDataMode = "";
+;saveDataMode = "c";
 
 
 // ◆ Whether to save macro information in bookmarks
@@ -179,10 +179,10 @@ function KAGWindow_config()
 // When specifying a mouse cursor constant, it is not necessary to prefix it with & 
 // as specified in the cursor tag. When specifying a mouse cursor filename, 
 // enclose it in "" (double quotations).
-;cursorDefault = crArrow; // Default mouse cursor
-;cursorPointed = crHandPoint; // When pointing at links, etc.
-;cursorWaitingClick = crArrow; // While waiting for a click
-;cursorDraggable = crSizeAll; // When the message layer is draggable
+;cursorDefault = "cursor.cur"; // Default mouse cursor
+;cursorPointed = "cursor.cur"; // When pointing at links, etc.
+;cursorWaitingClick = "cursor.cur"; // While waiting for a click
+;cursorDraggable = "cursor.cur"; // When the message layer is draggable
 
 
 // ◆ Label Recording
@@ -279,11 +279,11 @@ function KAGWindow_config()
 // Specifies the position name (left, left_center, etc.) of the foreground layer 
 // specified by the pos attribute of the image tag or img tag and the corresponding 
 // center position (x coordinate). Specified in the format ;scPositionX.PositionName = CenterPosition;
-;scPositionX.left = 160;
-;scPositionX.left_center = 240;
-;scPositionX.center = 320;
-;scPositionX.right_center = 400;
-;scPositionX.right = 480;
+;scPositionX.left = 384;
+;scPositionX.left_center = 672;
+;scPositionX.center = 960;
+;scPositionX.right_center = 1248;
+;scPositionX.right = 1536;
 
 
 
@@ -420,7 +420,7 @@ function Menu_visible_config()
 
 // ◆ Whether to display the menu bar
 // If hidden, you will naturally be unable to access any menu items.
-;menu.visible = true;
+;menu.visible = false;
 
 
 
@@ -602,7 +602,7 @@ function MessageLayer_config()
 // specified by frameGraphic also needs to use an image created 
 // for ltAddAlpha (it is not automatically determined).
 // Images for ltAddAlpha can be created with an image format converter.
-;layerType = ltAlpha;
+;layerType = ltAddAlpha;
 
 // ◆ Image for message frame
 // Specify the filename of the image for the message frame.
@@ -635,10 +635,10 @@ function MessageLayer_config()
 // ◆ Initial Position
 // These correspond to the left, top, width, and height attributes of the 
 // position tag respectively.
-;ml = 16;  // Left position
-;mt = 416;  // Top position
-;mw = 800-32;   // Width
-;mh = 200-32;   // Height
+;ml = 40;  // Left position
+;mt = 740;  // Top position
+;mw = 1840;   // Width
+;mh = 300;   // Height
 
 
 // ◆ Auto-return/Page Break
@@ -664,7 +664,7 @@ function MessageLayer_config()
 
 // ◆ Font Size
 // Specify the default font size (height) in pixels.
-;defaultFontSize = 26;  // Corresponds to the size attribute of the deffont tag
+;defaultFontSize = 42;  // Corresponds to the size attribute of the deffont tag
 
 
 
@@ -672,7 +672,7 @@ function MessageLayer_config()
 
 // ◆ Line Spacing
 // Specify the line spacing in pixels.
-;defaultLineSpacing = 3; // Corresponds to the linespacing attribute of the defstyle tag
+;defaultLineSpacing = 10; // Corresponds to the linespacing attribute of the defstyle tag
 
 // ◆ Pitch (Character Spacing)
 // Specify the character spacing in pixels.
@@ -693,7 +693,7 @@ function MessageLayer_config()
 // (Or delete the system variable file)
 // Multiple fonts can be specified separated by commas. In that case, 
 // if the font written first exists, it will take precedence.
-;userFace = "MS Gothic"; // Corresponds to the face attribute of the deffont tag
+;userFace = "playtime"; // Corresponds to the face attribute of the deffont tag
 
 
 
@@ -973,14 +973,14 @@ function HistoryLayer_config()
 
 
 // ◆ Font Size (in pixels)
-;fontHeight = 24;
+;fontHeight = 40;
 
 
 
 
 
 // ◆ Line Height
-;lineHeight = 28;
+;lineHeight = 50;
 
 
 
@@ -1038,8 +1038,8 @@ function HistoryLayer_config()
 
 //[start-historylayer-additionals]
 
-marginL = 100;
-marginR = 100;
+marginL = 250;
+marginR = 250;
 marginT = 40;
 marginB = 40;
     

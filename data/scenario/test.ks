@@ -1,0 +1,5 @@
+﻿*start|Start
+
+[initscene]
+
+Test

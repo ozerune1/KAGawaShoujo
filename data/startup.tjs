@@ -1,17 +1,16 @@
-﻿{
-	var throw_system_not_found =
-		function
-		{
-			throw new Exception(
-				"System not found\n"
-				"This introductory script will not function properly unless the\n"
-				"folder/file configuration is the same as when KAG is distributed.");
-		};
+﻿// startup.tjs - Startup Script
 
-	if(Storages.isExistentStorage("../template/system/Initialize.tjs"))	{
-		Storages.addAutoPath("../template/system/");
-		Scripts.execStorage("../template/system/Initialize.tjs");
-	} else {
-		throw_system_not_found();
-	}
-}
+// Copyright (C) 2001, W.Dee  Modification and distribution are free.
+
+
+
+if (typeof(Plugins.cxdec) != "undefined")
+
+    Plugins.cxdec.registerLicenseMagicNumber(Plugins.cxdec.licenseMagicNumber);
+
+
+
+// This script is the very first script to be executed.
+
+Scripts.execStorage("system/Initialize.tjs"); // Execute system/Initialize.tjs
+
