@@ -1,18 +1,21 @@
 ﻿*logo|
-
 [cancelskip]
 [rclick enabled=false]
 [clickskip enabled=true]
-[position layer=message0 frame="" opacity=0 left=0 top=0 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=true]
 
-[beginskip]
-[begintrans]
-[newlay name=logo file=logo level=6 xpos=0 ypos=0]
-[endtrans trans=normal time=1000]
-[wait time=3000]
-[begintrans]
+[freevideo]
+
+[video visible=true mode=overlay left=0 top=0 width=1920 height=1080]
+
+[playvideo storage="splash.wmv" clear=false]
+[wv canskip=true]
+
+[cancelskip]
+[image storage="splash_frame" page="fore" layer="base" visible=true]
+[wait time=1000 canskip=false]
+
+[freevideo]
 [allimage delete]
-[endtrans trans=normal time=1000]
-[endskip]
 
+[rclick enabled=true]
 @return

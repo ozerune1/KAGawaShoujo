@@ -114,11 +114,7 @@ if (sf.first_start != 'comp') {
 
 [endscript]
 
-[video visible=true mode=overlay left=0 top=0 width=1920 height=1080]
-[playvideo storage="splash.wmv" clear=false]
-[wv canskip=true]
-
-[image storage="splash_frame" layer="base" page="fore"]
+[call storage=logo.ks target="*logo"]
 
 [eval exp="tf.from_splash = 1"]
 
