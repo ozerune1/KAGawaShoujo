@@ -18,7 +18,7 @@
 
 ; Load base image
 [backlay]
-[position layer=message1 frame="config_base" left=0 top=0 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=true  transparent=false page=back]
+[position layer=message1 frame="config_base" left=560 top=240 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=true  transparent=false page=back]
 [current layer=message1 page=back]
 
 ; Button placement
@@ -30,17 +30,17 @@
 [button name="config_fullscreen" exp='setScreenButton(false)']
 
 ; Text Speed
-[locate x=63 y=241]
-[slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar_over" min=0 max=10 value=kag.textspeed nohilight]
+[locate x=63 y=225]
+[slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar" min=0 max=10 value=kag.textspeed nohilight]
 
 ; Auto Speed
-[locate x=63 y=336]
-[slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar_over" min=0 max=10 value=kag.autospeed nohilight]
+[locate x=63 y=320]
+[slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar" min=0 max=10 value=kag.autospeed nohilight]
 
 ; Screen Effects
 [locate x=64 y=435]
 [button name=config_effecton exp="setNoEffectButton(false)"]
-[locate x=223 y=435]
+[locate x=223 y=442]
 [button name=config_effectoff exp="setNoEffectButton(true)"]
 
 ; Skip
@@ -50,15 +50,15 @@
 [button name="config_skipalrdy" exp="setSkipButton(false)"]
 
 ; BGM Volume
-[locate x=431 y=147]
+[locate x=431 y=131]
 [slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar_over" min=0 max=100 value=kag.bgmvolume nohilight]
 
 ; SE Volume
-[locate x=431 y=241]
+[locate x=431 y=225]
 [slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar_over" min=0 max=100 value=kag.sevolume nohilight]
 
 ; VOICE Volume
-[locate x=431 y=336]
+[locate x=431 y=320]
 [slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar_over" min=0 max=100 value=kag.voicevolume nohilight]
 
 ; Voice Buttons
@@ -76,17 +76,17 @@
 [button name="config_voice5" normal="config_voice5_on" exp="setVoiceOnButton('voice5')"]
 
 ; Initialize
-[locate x=680 y=531]
+[locate x=550 y=531]
 [button name="config_initial" exp="initial()"]
 
 ; Return Button
 [if exp="tf.fromTitle"]
-[locate x=672 y=47]
+[locate x=622 y=531]
 [button name="config_title" target=*backtotitle]
 [else]
-[locate x=672 y=47]
+[locate x=622 y=531]
 [button name="return" target=*backtogame]
-[locate x=557 y=47]
+[locate x=507 y=531]
 [button name="config_title" exp="gotoTitle()"]
 [endif]
 
