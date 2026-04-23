@@ -82,11 +82,11 @@
 
 [locate x=140 y=600]
 
-[button name="start" target=*gamestart]
+[button normal="start_normal" over="start_over" target=*gamestart]
 
 [locate x=140 y=675]
 
-[button name="continue" storage=load.ks target=*startFromTitle]
+[button normal="continue_normal" over="continue_over" storage=load.ks target=*startFromTitle]
 
 
 
@@ -96,21 +96,21 @@
 
 [if exp="sf.clear || tf.allseen"]
 
-[button name="extra" target=*extra]
+[button normal="extra_normal" over="extra_over" target=*extra]
 
 [else]
 
-[button name="extra" disabled]
+[button normal="extra_normal" over="extra_over" disabled]
 
 [endif]
 
 [locate x=140 y=825]
 
-[button name="config" storage=config.ks  target=*startFromTitle]
+[button normal="config_normal" over="config_over" storage=config.ks  target=*startFromTitle]
 
 [locate x=140 y=900]
 
-[button name="exit" exp='kag.close()']
+[button normal="exit_normal" over="exit_over" exp='kag.close()']
 
 
 

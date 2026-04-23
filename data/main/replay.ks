@@ -24,9 +24,9 @@
 
 [backlay]
 
-[position layer=message0 frame="replaymode_base" opacity=255 left=0 top=0 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=true transparent=false page=back]
+[position layer=message1 frame="replaymode_base" opacity=255 left=560 top=240 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=true transparent=false page=back]
 
-[current layer=message0 page=back]
+[current layer=message1 page=back]
 
 
 
@@ -160,7 +160,7 @@
 
 [wt]
 
-[current layer=message0 page=fore]
+[current layer=message1 page=fore]
 
 [s]
 

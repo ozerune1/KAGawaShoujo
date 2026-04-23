@@ -11,8 +11,8 @@
 ; Load base image
 [rclick enabled=true jump=true storage="" target=*backtotitle]
 [backlay]
-[position layer=message0 frame="cgmode_base" opacity=255 left=0 top=0 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=true transparent=false page=back]
-[current layer=message0 page=back]
+[position layer=message1 frame="cgmode_base" opacity=255 left=560 top=240 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=true transparent=false page=back]
+[current layer=message1 page=back]
 
 ; Buttons for transition
 [locate x=330 y=48]
@@ -79,7 +79,7 @@
 [eval exp='setCgmodePageButton()']
 [trans method=crossfade time=500]
 [wt]
-[current layer=message0 page=fore]
+[current layer=message1 page=fore]
 [s]
 
 *cgview
@@ -90,12 +90,12 @@
 [if exp='isCgView()']
 [stoptrans]
 [backlay]
-[position page=back layer=message0 frame="" opacity=255 left=0 top=0 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=true]
-[current page=back layer=message0]
+[position page=back layer=message1 frame="" opacity=255 left=0 top=0 width=800 height=600 marginT=0 marginL=0 marginR=0 marginB=0 visible=true]
+[current page=back layer=message1]
 [eval exp='cgView()']
 [trans method=crossfade time=500]
 [wt]
-[current page=fore layer=message0]
+[current page=fore layer=message1]
 [click target=*cgviewloop]
 [s]
 [endif]
