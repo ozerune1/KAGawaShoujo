@@ -85,9 +85,7 @@
 [button name="config_title" target=*backtotitle]
 [else]
 [locate x=622 y=531]
-[button name="return" target=*backtogame]
-[locate x=507 y=531]
-[button name="config_title" exp="gotoTitle()"]
+[button name="config_title" target=*backtogame]
 [endif]
 
 [eval exp='configInit()']

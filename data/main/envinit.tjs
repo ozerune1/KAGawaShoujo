@@ -66,9 +66,9 @@
 
 	"stages" => %[
 
-		"road" => %[
+		"snowywoods" => %[
 
-			"image" => "bg01_TIME",
+			"image" => "snowywoods_TIME",
 
 			],
 

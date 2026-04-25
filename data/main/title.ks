@@ -160,4 +160,4 @@
 
 [wt]
 
-[jump storage=s0001.ks]
+[jump storage=char.ks]

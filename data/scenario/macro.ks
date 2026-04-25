@@ -18,39 +18,13 @@
 
 [rclick enabled=true jump=false]
 
-[position layer=message0 frame="messagewindow" opacity=255 left=25 top=360 width=750 height=220 marginL=16 marginT=40 marginR=16 marginB=16 nameLeft=32 nameTop=8 nameWidth=150 nameHeight=40 visible=false]
-
+[position layer=message0 frame="messagewindow" opacity=200 left=50 top=800 width=1820 height=240 marginL=80 marginT=20 marginR=20 marginB=30 nameLeft=50 nameTop=760 nameWidth=150 nameHeight=40 visible=true]
 [current layer=message0]
-
-[if exp="tf.recollect"]
-
-[sysbutton name=msg_exit   x=358 y=0 exp="kag.process('title.ks','*start')"]
-
-[sysbutton name=msg_skip   x=486 y=0 exp="kag.onSkipToNextStopMenuItemClick()" nostable]
-
-[sysbutton name=msg_auto   x=550 y=0 exp="kag.onAutoModeMenuItemClick()" nostable]
-
-[sysbutton name=msg_log    x=614 y=0 exp="kag.onShowHistoryMenuItemClick()"]
-
-[sysbutton name=msg_config x=678 y=0 exp="startConfig()"]
-
-[else]
-
-[sysbutton name=msg_save   x=358 y=0 exp="startSave()"]
-
-[sysbutton name=msg_load   x=422 y=0 exp="startLoad()"]
-
-[sysbutton name=msg_skip   x=486 y=0 exp="kag.onSkipToNextStopMenuItemClick()" nostable]
-
-[sysbutton name=msg_auto   x=550 y=0 exp="kag.onAutoModeMenuItemClick()" nostable]
-
-[sysbutton name=msg_log    x=614 y=0 exp="kag.onShowHistoryMenuItemClick()"]
-
-[sysbutton name=msg_config x=678 y=0 exp="startConfig()"]
-
-[endif]
+[glyph fix=true left=1770 top=200]
 
 [init]
+
+[deffont face="Playtime Cyrillic" size=42]
 
 [linemode mode=page]
 

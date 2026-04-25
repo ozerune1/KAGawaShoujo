@@ -785,7 +785,7 @@ function MessageLayer_config()
 
 
 // Page break click wait glyph
-;pageBreakGlyph = "PageBreak";  // Corresponds to the page attribute of the glyph tag
+;pageBreakGlyph = "LineBreak";  // Corresponds to the page attribute of the glyph tag
 ;pageBreakBaseLine = 0;
 
 
