@@ -51,15 +51,15 @@
 
 ; BGM Volume
 [locate x=431 y=131]
-[slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar_over" min=0 max=100 value=kag.bgmvolume nohilight]
+[slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar" min=0 max=100 value=kag.bgmvolume nohilight]
 
 ; SE Volume
 [locate x=431 y=225]
-[slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar_over" min=0 max=100 value=kag.sevolume nohilight]
+[slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar" min=0 max=100 value=kag.sevolume nohilight]
 
 ; VOICE Volume
 [locate x=431 y=320]
-[slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar_over" min=0 max=100 value=kag.voicevolume nohilight]
+[slider width=303 height=28 opacity=0 normal="slidebar" over="slidebar" min=0 max=100 value=kag.voicevolume nohilight]
 
 ; Voice Buttons
 [locate x=432 y=434]

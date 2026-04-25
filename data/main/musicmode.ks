@@ -38,19 +38,19 @@
 
 ; Navigation Buttons
 
-[locate x=330 y=48]
+[locate x=284 y=48]
 
 [button name="extra_cgmode" storage="cgmode.ks"]
 
-[locate x=456 y=47]
+[locate x=410 y=47]
 
 [button name="extra_replaymode" storage="replay.ks"]
 
-[locate x=563 y=47]
+[locate x=536 y=47]
 
 [button name="extra_musicmode" disabled]
 
-[locate x=692 y=47]
+[locate x=662 y=47]
 
 [button name="return" target=*backtotitle]
 
@@ -58,19 +58,19 @@
 
 ; Function Buttons
 
-[locate x=140 y=484]
+[locate x=188 y=484]
 
 [button name="musicmode_play"      exp="startBgm()"]
 
-[locate x=  7 y=484]
+[locate x=  55 y=484]
 
 [button name="musicmode_stop"      exp="stopBgm()"]
 
-[locate x=  7 y=530]
+[locate x=  55 y=530]
 
 [button name="musicmode_repeat"    exp='setRepeat(true)']
 
-[locate x=140 y=530]
+[locate x=188 y=530]
 
 [button name="musicmode_allrepeat" exp='setRepeat(false)']
 

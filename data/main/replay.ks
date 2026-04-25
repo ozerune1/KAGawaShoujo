@@ -32,19 +32,19 @@
 
 ; Navigation buttons
 
-[locate x=330 y=48]
+[locate x=284 y=48]
 
 [button name="extra_cgmode" storage="cgmode.ks"]
 
-[locate x=456 y=47]
+[locate x=410 y=47]
 
 [button name="extra_replaymode" disabled]
 
-[locate x=563 y=47]
+[locate x=536 y=47]
 
 [button name="extra_musicmode" storage="musicmode.ks"]
 
-[locate x=692 y=47]
+[locate x=662 y=47]
 
 [button name="return" target=*backtotitle]
 
@@ -52,27 +52,27 @@
 
 ; Character selection
 
-[locate x=10 y=101]
+[locate x=55 y=101]
 
 [button name="cgmode_page0" exp="tf.cgmodepage=0" target="*loop"]
 
-[locate x=10 y=177]
+[locate x=55 y=177]
 
 [button name="cgmode_page1" exp="tf.cgmodepage=1" target="*loop"]
 
-[locate x=10 y=256]
+[locate x=55 y=256]
 
 [button name="cgmode_page2" exp="tf.cgmodepage=2" target="*loop"]
 
-[locate x=10 y=336]
+[locate x=55 y=336]
 
 [button name="cgmode_page3" exp="tf.cgmodepage=3" target="*loop"]
 
-[locate x=10 y=416]
+[locate x=55 y=416]
 
 [button name="cgmode_page4" exp="tf.cgmodepage=4" target="*loop"]
 
-[locate x=10 y=496]
+[locate x=55 y=496]
 
 [button name="cgmode_page5" exp="tf.cgmodepage=5" target="*loop"]
 
