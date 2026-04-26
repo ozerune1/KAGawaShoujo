@@ -18,7 +18,7 @@
 
 [rclick enabled=true jump=false]
 
-[position layer=message0 frame="messagewindow" opacity=200 left=50 top=800 width=1820 height=240 marginL=80 marginT=20 marginR=20 marginB=30 nameLeft=50 nameTop=760 nameWidth=150 nameHeight=40 visible=true]
+[position layer=message0 frame="messagewindow" opacity=200 left=50 top=800 width=1820 height=240 marginL=80 marginT=20 marginR=20 marginB=30 nameLeft=50 nameTop=-100 nameWidth=150 nameHeight=40 visible=true]
 [current layer=message0]
 [glyph fix=true left=1770 top=200]
 

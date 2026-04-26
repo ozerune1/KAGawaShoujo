@@ -316,10 +316,7 @@ function quicksaveAction(map=false)
  */
 function dispNameFilter(dispName)
 {
-    if (dispName.length <= 1) {
-        dispName = " " + dispName + " ";
-    }
-    return "[" + dispName + "]";
+    return dispName;
 }
 
 
